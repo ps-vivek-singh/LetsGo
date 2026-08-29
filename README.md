@@ -86,29 +86,29 @@ sequenceDiagram
     autonumber
     actor User as User / Browser
     participant Orchestrator as OrchestratorAgent
-    participant Loop as AgenticLoop
+    participant AgenticLoop as AgenticLoop
     participant MCP as FastMCP Tool Servers
     participant Reflection as ReflectionEngine
     participant Synthesizer as ResponseSynthesizer
     participant DB as SQLite DB (WAL)
 
     User->>Orchestrator: Submit Query ("Quick lunch with chicken under 15 min")
-    Orchestrator->>Loop: run(query, session_id)
-    Loop->>Loop: 1. PERCEIVE (QueryParser extracts entities & meal_type)
-    Loop->>MCP: 2. DISCOVER (List tools on all FastMCP servers)
-    Loop->>Loop: 3. PLAN (Route requested sections into execution queue)
+    Orchestrator->>AgenticLoop: run(query, session_id)
+    AgenticLoop->>AgenticLoop: 1. PERCEIVE (QueryParser extracts entities & meal_type)
+    AgenticLoop->>MCP: 2. DISCOVER (List tools on all FastMCP servers)
+    AgenticLoop->>AgenticLoop: 3. PLAN (Route requested sections into execution queue)
     
     loop ACT -> OBSERVE (per section)
-        Loop->>MCP: 4. ACT (Invoke tool with structured parameters)
-        MCP-->>Loop: 5. OBSERVE (Capture output & shape card data)
+        AgenticLoop->>MCP: 4. ACT (Invoke tool with structured parameters)
+        MCP-->>AgenticLoop: 5. OBSERVE (Capture output & shape card data)
     end
 
-    Loop->>Reflection: 6. REFLECT (Cross-check multi-domain rules)
-    Reflection-->>Loop: ReflectionResult (changes_made, confirmations)
-    Loop->>Synthesizer: 7. SYNTHESIZE (Compose natural-language briefing)
-    Synthesizer-->>Loop: Friendly Executive Summary
-    Loop->>DB: Persist intent, trace & section results
-    Loop-->>Orchestrator: AgenticResult
+    AgenticLoop->>Reflection: 6. REFLECT (Cross-check multi-domain rules)
+    Reflection-->>AgenticLoop: ReflectionResult (changes_made, confirmations)
+    AgenticLoop->>Synthesizer: 7. SYNTHESIZE (Compose natural-language briefing)
+    Synthesizer-->>AgenticLoop: Friendly Executive Summary
+    AgenticLoop->>DB: Persist intent, trace & section results
+    AgenticLoop-->>Orchestrator: AgenticResult
     Orchestrator-->>User: Structured JSON + SSE Stream
 ```
 
