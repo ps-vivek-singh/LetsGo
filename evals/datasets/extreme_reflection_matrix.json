@@ -1,0 +1,53 @@
+[
+  {
+    "id": "ext_refl_01_triple_heat_uv_meal",
+    "description": "Compound Conflict: Temp 42°C (Heat switches Biking to Drive), UV 11.5, and Hot Porridge requested",
+    "sections": {
+      "weather": {
+        "section": "weather",
+        "status": "success",
+        "data": { "temp": 42, "condition": "Extreme Heat", "uv_index": 11.5 }
+      },
+      "commute": {
+        "section": "commute",
+        "status": "success",
+        "data": { "recommended_mode": "bike", "eta_minutes": 25, "distance_km": 6.0 }
+      },
+      "breakfast": {
+        "section": "breakfast",
+        "status": "success",
+        "data": { "recipe_name": "Hot Oatmeal Porridge with Cinnamon", "prep_time_minutes": 10, "meal_type": "breakfast" }
+      }
+    },
+    "intent": { "location": "Las Vegas", "destination": "Strip" },
+    "expected_overrides_count": 2,
+    "expected_mode_override": "drive",
+    "expected_alert_substrings": ["Extreme heat"],
+    "expected_note_substring": "cold or light"
+  },
+  {
+    "id": "ext_refl_02_freeze_and_slow_dinner",
+    "description": "Double Conflict: Freezing -12°C with walk mode + 50m commute with 25m meal prep",
+    "sections": {
+      "weather": {
+        "section": "weather",
+        "status": "success",
+        "data": { "temp": -12, "condition": "Blizzard", "uv_index": 0.5 }
+      },
+      "commute": {
+        "section": "commute",
+        "status": "success",
+        "data": { "recommended_mode": "walk", "eta_minutes": 50, "distance_km": 3.5 }
+      },
+      "breakfast": {
+        "section": "breakfast",
+        "status": "success",
+        "data": { "recipe_name": "Slow Braised Beef Pot Roast", "prep_time_minutes": 25, "meal_type": "dinner" }
+      }
+    },
+    "intent": { "location": "Anchorage", "destination": "Midtown" },
+    "expected_overrides_count": 2,
+    "expected_alert_substrings": ["Freezing conditions"],
+    "expected_note_substring": "consider a quicker"
+  }
+]

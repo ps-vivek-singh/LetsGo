@@ -1,0 +1,46 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+*.egg
+dist/
+build/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Environment / secrets
+.env
+*.env
+
+# Session data & Telemetry (runtime-generated)
+data/sessions/*.json
+data/sessions.db*
+data/telemetry/
+*.jsonl
+
+# Evaluation results (runtime-generated reports)
+evals/results/*.json
+!evals/results/.gitkeep
+
+# IDE
+.vscode/
+.idea/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Pytest
+.pytest_cache/
+

@@ -1,0 +1,13 @@
+{
+  "default_location": "hyderabad",
+  "units": "metric",
+  "default_sections": [
+    "weather",
+    "commute",
+    "news",
+    "breakfast"
+  ],
+  "news_categories": [
+    "general"
+  ]
+}

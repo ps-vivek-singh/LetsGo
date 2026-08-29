@@ -1,0 +1,6 @@
+requests>=2.32.0
+transformers>=4.41.0
+torch>=2.2.0
+python-dotenv>=1.0.0
+fastmcp>=3.4.6
+pytest>=7.0.0

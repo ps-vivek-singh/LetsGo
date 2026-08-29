@@ -1,0 +1,89 @@
+[
+  {
+    "id": "multi_01_quad_briefing_chicago",
+    "description": "Full 4-Tool Briefing: Weather + Commute + News + Recipe",
+    "query": "Chicago morning briefing: weather in Chicago, traffic from Evanston to Loop, top news headlines, and 10-minute breakfast with eggs",
+    "expected_tools": [
+      "weather.get_weather",
+      "commute.get_commute_route",
+      "news.get_headlines",
+      "recipe.get_recipe"
+    ],
+    "required_tool_arguments": {
+      "weather.get_weather": { "location": "Chicago" },
+      "commute.get_commute_route": { "origin": "Evanston", "destination": "Loop" },
+      "recipe.get_recipe": { "ingredients": ["eggs"], "max_prep_minutes": 10 }
+    },
+    "expected_sections": ["weather", "commute", "news", "breakfast"],
+    "min_tools_count": 4,
+    "max_steps": 7
+  },
+  {
+    "id": "multi_02_triad_weather_commute_breakfast",
+    "description": "3-Tool Routine: Weather + Commute + Breakfast",
+    "query": "Forecast in Boston, drive from Boston to Cambridge, and quick breakfast recipe with oats in 10 minutes",
+    "expected_tools": [
+      "weather.get_weather",
+      "commute.get_commute_route",
+      "recipe.get_recipe"
+    ],
+    "required_tool_arguments": {
+      "weather.get_weather": { "location": "Boston" },
+      "commute.get_commute_route": { "origin": "Boston", "destination": "Cambridge" }
+    },
+    "expected_sections": ["weather", "commute", "breakfast"],
+    "min_tools_count": 3,
+    "max_steps": 6
+  },
+  {
+    "id": "multi_03_triad_travel_news_weather",
+    "description": "3-Tool Travel: Weather + Itinerary + Headlines",
+    "query": "Planning a 3-day itinerary for Paris, get weather forecast in Paris, and top global headlines",
+    "expected_tools": [
+      "weather.get_weather",
+      "itinerary.get_itinerary",
+      "news.get_headlines"
+    ],
+    "required_tool_arguments": {
+      "weather.get_weather": { "location": "Paris" },
+      "itinerary.get_itinerary": { "location": "Paris", "days": 3 }
+    },
+    "expected_sections": ["weather", "itinerary", "news"],
+    "min_tools_count": 3,
+    "max_steps": 6
+  },
+  {
+    "id": "multi_04_quad_dinner_travel_weather_news",
+    "description": "4-Tool Compound: Weather + Commute + News + Dinner Recipe",
+    "query": "Forecast in Denver, commute from Denver to Boulder, latest news, and quick dinner idea with beef in 15 minutes",
+    "expected_tools": [
+      "weather.get_weather",
+      "commute.get_commute_route",
+      "news.get_headlines",
+      "recipe.get_recipe"
+    ],
+    "required_tool_arguments": {
+      "weather.get_weather": { "location": "Denver" },
+      "commute.get_commute_route": { "origin": "Denver", "destination": "Boulder" }
+    },
+    "expected_sections": ["weather", "commute", "news", "breakfast"],
+    "min_tools_count": 4,
+    "max_steps": 7
+  },
+  {
+    "id": "multi_05_triad_transit_news_meal",
+    "description": "3-Tool Commute + News + Lunch Recipe",
+    "query": "Transit route from Brooklyn to Queens, top headlines, and lunch recipe with chicken in 12 minutes",
+    "expected_tools": [
+      "commute.get_commute_route",
+      "news.get_headlines",
+      "recipe.get_recipe"
+    ],
+    "required_tool_arguments": {
+      "commute.get_commute_route": { "origin": "Brooklyn", "destination": "Queens" }
+    },
+    "expected_sections": ["commute", "news", "breakfast"],
+    "min_tools_count": 3,
+    "max_steps": 6
+  }
+]

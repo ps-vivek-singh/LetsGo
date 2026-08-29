@@ -1,0 +1,94 @@
+[
+  {
+    "id": "adv_01_slang_tube_commute",
+    "category": "colloquial_phrasing",
+    "query": "How is the tube running from Paddington to Canary Wharf this morning?",
+    "expected_intents": ["commute"],
+    "expected_slots": { "location": "Paddington", "destination": "Canary Wharf" },
+    "difficulty": "hard"
+  },
+  {
+    "id": "adv_02_umbrella_metaphor",
+    "category": "metaphor_weather",
+    "query": "Is it umbrella weather in Seattle or can I leave the raincoat at home?",
+    "expected_intents": ["weather"],
+    "expected_slots": { "location": "Seattle" },
+    "difficulty": "medium"
+  },
+  {
+    "id": "adv_03_fridge_dump_cooking",
+    "category": "multi_ingredient_constraint",
+    "query": "Whip up something quick in under 8 min with whatever is in the fridge: mushrooms, spinach, garlic and eggs for dinner",
+    "expected_intents": ["breakfast"],
+    "expected_slots": {
+      "ingredients": ["mushrooms", "spinach", "garlic", "eggs"],
+      "meal_type": "dinner",
+      "time_constraint": "8 min"
+    },
+    "difficulty": "hard"
+  },
+  {
+    "id": "adv_04_budget_backpacking_trip",
+    "category": "budget_and_duration",
+    "query": "Backpacking trip to Berlin for 5 days on a budget with sightseeing places to visit",
+    "expected_intents": ["itinerary"],
+    "expected_slots": { "location": "Berlin", "days": 5, "budget": "budget" },
+    "difficulty": "medium"
+  },
+  {
+    "id": "adv_05_luxury_getaway_week",
+    "category": "budget_and_duration",
+    "query": "Planning a luxury getaway vacation to Dubai for 1 week with explore and food",
+    "expected_intents": ["itinerary"],
+    "expected_slots": { "location": "Dubai", "days": 7, "budget": "luxury" },
+    "difficulty": "medium"
+  },
+  {
+    "id": "adv_06_cold_dinner_combo",
+    "category": "compound_weather_meal",
+    "query": "It is freezing cold in Toronto today, give me the forecast and a hearty dinner with potato and beef",
+    "expected_intents": ["weather", "breakfast"],
+    "expected_slots": { "location": "Toronto", "ingredients": ["potato", "beef"], "meal_type": "dinner" },
+    "difficulty": "medium"
+  },
+  {
+    "id": "adv_07_airport_rush_hour",
+    "category": "complex_commute",
+    "query": "Driving time from San Jose to San Francisco airport during rush hour with traffic updates",
+    "expected_intents": ["commute"],
+    "expected_slots": { "location": "San Jose", "destination": "San Francisco airport" },
+    "difficulty": "hard"
+  },
+  {
+    "id": "adv_08_vegan_snack_time",
+    "category": "diet_and_meal_type",
+    "query": "Make a 5-minute healthy snack with avocado, tomato and onion",
+    "expected_intents": ["breakfast"],
+    "expected_slots": {
+      "ingredients": ["avocado", "tomato", "onion"],
+      "meal_type": "snack",
+      "time_constraint": "5 min"
+    },
+    "difficulty": "medium"
+  },
+  {
+    "id": "adv_09_multi_city_trio",
+    "category": "multi_intent_triad",
+    "query": "Morning briefing: forecast in Vancouver, bus transit to Richmond, and top world news headlines",
+    "expected_intents": ["weather", "commute", "news"],
+    "expected_slots": { "location": "Vancouver", "destination": "Richmond" },
+    "difficulty": "hard"
+  },
+  {
+    "id": "adv_10_lunch_time_sensitive",
+    "category": "meal_timing",
+    "query": "I only have 12 minutes for lunch, what can I cook with chicken and rice?",
+    "expected_intents": ["breakfast"],
+    "expected_slots": {
+      "ingredients": ["chicken", "rice"],
+      "meal_type": "lunch",
+      "time_constraint": "12 min"
+    },
+    "difficulty": "medium"
+  }
+]

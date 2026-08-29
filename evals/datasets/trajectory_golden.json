@@ -1,0 +1,59 @@
+[
+  {
+    "id": "traj_01_weather_only",
+    "query": "What is the weather in Chicago?",
+    "expected_tools": ["weather.get_weather"],
+    "max_steps": 4,
+    "required_args": {
+      "weather.get_weather": ["location"]
+    }
+  },
+  {
+    "id": "traj_02_news_only",
+    "query": "Show me top news headlines",
+    "expected_tools": ["news.get_headlines"],
+    "max_steps": 4,
+    "required_args": {
+      "news.get_headlines": []
+    }
+  },
+  {
+    "id": "traj_03_commute_weather",
+    "query": "Commute from Seattle to Bellevue and check weather in Seattle",
+    "expected_tools": ["weather.get_weather", "commute.get_commute_route"],
+    "max_steps": 5,
+    "required_args": {
+      "weather.get_weather": ["location"],
+      "commute.get_commute_route": ["location", "destination"]
+    }
+  },
+  {
+    "id": "traj_04_breakfast_news",
+    "query": "Give me morning news and breakfast with eggs",
+    "expected_tools": ["news.get_headlines", "recipe.get_recipe"],
+    "max_steps": 5,
+    "required_args": {
+      "recipe.get_recipe": ["ingredients"]
+    }
+  },
+  {
+    "id": "traj_05_itinerary_weather",
+    "query": "Plan a 2-day itinerary for Paris and get weather",
+    "expected_tools": ["weather.get_weather", "itinerary.get_itinerary"],
+    "max_steps": 5,
+    "required_args": {
+      "itinerary.get_itinerary": ["location", "days"]
+    }
+  },
+  {
+    "id": "traj_06_trio_briefing",
+    "query": "Weather in Austin, traffic to Downtown, and quick breakfast recipe with toast",
+    "expected_tools": ["weather.get_weather", "commute.get_commute_route", "recipe.get_recipe"],
+    "max_steps": 6,
+    "required_args": {
+      "weather.get_weather": ["location"],
+      "commute.get_commute_route": ["location", "destination"],
+      "recipe.get_recipe": ["ingredients"]
+    }
+  }
+]

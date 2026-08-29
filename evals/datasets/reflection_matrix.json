@@ -1,0 +1,211 @@
+[
+  {
+    "id": "refl_01_heatwave_walk_to_drive",
+    "description": "Rule 1: Temp >= 35°C switches walk/bike to drive",
+    "sections": {
+      "weather": {
+        "section": "weather",
+        "status": "success",
+        "data": { "temp": 38, "condition": "Sunny", "uv_index": 7 }
+      },
+      "commute": {
+        "section": "commute",
+        "status": "success",
+        "data": { "recommended_mode": "walk", "eta_minutes": 25, "distance_km": 2.0 }
+      }
+    },
+    "intent": { "location": "Phoenix", "destination": "Downtown" },
+    "expected_overrides_count": 1,
+    "expected_mode_override": "drive",
+    "expected_alert_substring": "Extreme heat"
+  },
+  {
+    "id": "refl_02_freezing_alert",
+    "description": "Rule 2: Temp <= 2°C injects freezing alert for walking/biking",
+    "sections": {
+      "weather": {
+        "section": "weather",
+        "status": "success",
+        "data": { "temp": -3, "condition": "Snow", "uv_index": 1 }
+      },
+      "commute": {
+        "section": "commute",
+        "status": "success",
+        "data": { "recommended_mode": "bike", "eta_minutes": 20, "distance_km": 5.0 }
+      }
+    },
+    "intent": { "location": "Chicago", "destination": "Loop" },
+    "expected_overrides_count": 1,
+    "expected_alert_substring": "Freezing conditions"
+  },
+  {
+    "id": "refl_03_high_uv_alert",
+    "description": "Rule 3: UV Index >= 8 triggers sun protection warning",
+    "sections": {
+      "weather": {
+        "section": "weather",
+        "status": "success",
+        "data": { "temp": 28, "condition": "Clear", "uv_index": 9.5 }
+      },
+      "commute": {
+        "section": "commute",
+        "status": "success",
+        "data": { "recommended_mode": "bike", "eta_minutes": 15, "distance_km": 4.0 }
+      }
+    },
+    "intent": { "location": "Miami", "destination": "South Beach" },
+    "expected_overrides_count": 1,
+    "expected_alert_substring": "UV index is very high"
+  },
+  {
+    "id": "refl_04_long_commute_slow_meal",
+    "description": "Rule 4: Commute >= 45m and meal prep >= 15m injects time-saving note",
+    "sections": {
+      "commute": {
+        "section": "commute",
+        "status": "success",
+        "data": { "recommended_mode": "drive", "eta_minutes": 55, "distance_km": 35.0 }
+      },
+      "breakfast": {
+        "section": "breakfast",
+        "status": "success",
+        "data": { "recipe_name": "Full English Breakfast", "prep_time_minutes": 25, "meal_type": "breakfast" }
+      }
+    },
+    "intent": { "location": "London", "destination": "Heathrow" },
+    "expected_overrides_count": 1,
+    "expected_note_substring": "consider a quicker"
+  },
+  {
+    "id": "refl_05_heat_with_hot_stew",
+    "description": "Rule 5a: Temp >= 30°C and hot stew suggests lighter/cold dish",
+    "sections": {
+      "weather": {
+        "section": "weather",
+        "status": "success",
+        "data": { "temp": 33, "condition": "Sunny", "uv_index": 6 }
+      },
+      "breakfast": {
+        "section": "breakfast",
+        "status": "success",
+        "data": { "recipe_name": "Hot Beef Stew and Porridge", "prep_time_minutes": 10, "meal_type": "lunch" }
+      }
+    },
+    "intent": { "location": "Dallas" },
+    "expected_overrides_count": 1,
+    "expected_note_substring": "cold or light"
+  },
+  {
+    "id": "refl_06_cold_with_cold_salad",
+    "description": "Rule 5b: Temp <= 5°C and cold salad suggests warm hearty dish",
+    "sections": {
+      "weather": {
+        "section": "weather",
+        "status": "success",
+        "data": { "temp": 2, "condition": "Chilly", "uv_index": 2 }
+      },
+      "breakfast": {
+        "section": "breakfast",
+        "status": "success",
+        "data": { "recipe_name": "Chilled Cold Cucumber Salad", "prep_time_minutes": 10, "meal_type": "dinner" }
+      }
+    },
+    "intent": { "location": "Minneapolis" },
+    "expected_overrides_count": 1,
+    "expected_note_substring": "warm, hearty"
+  },
+  {
+    "id": "refl_07_all_consistent",
+    "description": "All sections consistent -> 0 overrides, multiple confirmations",
+    "sections": {
+      "weather": {
+        "section": "weather",
+        "status": "success",
+        "data": { "temp": 22, "condition": "Mild", "uv_index": 4 }
+      },
+      "commute": {
+        "section": "commute",
+        "status": "success",
+        "data": { "recommended_mode": "drive", "eta_minutes": 20, "distance_km": 10.0 }
+      },
+      "breakfast": {
+        "section": "breakfast",
+        "status": "success",
+        "data": { "recipe_name": "Avocado Toast", "prep_time_minutes": 8, "meal_type": "breakfast" }
+      }
+    },
+    "intent": { "location": "San Francisco", "destination": "Palo Alto" },
+    "expected_overrides_count": 0,
+    "min_confirmations": 2
+  },
+  {
+    "id": "refl_08_compound_uv_and_slow_meal",
+    "description": "Compound Rule 3 + Rule 4: High UV with Bike commute + Long commute & slow breakfast",
+    "sections": {
+      "weather": {
+        "section": "weather",
+        "status": "success",
+        "data": { "temp": 26, "condition": "Sunny", "uv_index": 9.5 }
+      },
+      "commute": {
+        "section": "commute",
+        "status": "success",
+        "data": { "recommended_mode": "bike", "eta_minutes": 50, "distance_km": 12.0 }
+      },
+      "breakfast": {
+        "section": "breakfast",
+        "status": "success",
+        "data": { "recipe_name": "Avocado Toast with Poached Eggs", "prep_time_minutes": 20, "meal_type": "breakfast" }
+      }
+    },
+    "intent": { "location": "San Diego", "destination": "La Jolla" },
+    "expected_overrides_count": 2,
+    "expected_alert_substring": "UV index is very high",
+    "expected_note_substring": "consider a quicker"
+  },
+  {
+    "id": "refl_09_compound_cold_and_cold_meal",
+    "description": "Compound Rule 2 + Rule 5: Freezing weather walking alert + chilled meal comfort suggestion",
+    "sections": {
+      "weather": {
+        "section": "weather",
+        "status": "success",
+        "data": { "temp": 0, "condition": "Freezing", "uv_index": 1.0 }
+      },
+      "commute": {
+        "section": "commute",
+        "status": "success",
+        "data": { "recommended_mode": "walk", "eta_minutes": 20, "distance_km": 1.5 }
+      },
+      "breakfast": {
+        "section": "breakfast",
+        "status": "success",
+        "data": { "name": "Cold Pasta Salad with Tuna", "prep_time_minutes": 10, "meal_type": "lunch" }
+      }
+    },
+    "intent": { "location": "Boston", "destination": "Back Bay" },
+    "expected_overrides_count": 2,
+    "expected_alert_substring": "Freezing conditions",
+    "expected_note_substring": "warm, hearty"
+  },
+  {
+    "id": "refl_10_heatwave_suppresses_uv_bike_alert",
+    "description": "Heatwave Override: 38°C with Bike commute switches to Drive, suppressing UV bike alert (non-contradictory)",
+    "sections": {
+      "weather": {
+        "section": "weather",
+        "status": "success",
+        "data": { "temp": 38, "condition": "Scorching Sun", "uv_index": 10.0 }
+      },
+      "commute": {
+        "section": "commute",
+        "status": "success",
+        "data": { "recommended_mode": "bike", "eta_minutes": 25, "distance_km": 5.0 }
+      }
+    },
+    "intent": { "location": "Phoenix", "destination": "Scottsdale" },
+    "expected_overrides_count": 1,
+    "expected_mode_override": "drive",
+    "expected_alert_substring": "Extreme heat"
+  }
+]

@@ -1,0 +1,796 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LetGO — Your Morning & Travel Briefing</title>
+  <meta name="description"
+    content="AI-powered morning briefing: weather, commute, news, and breakfast — all in one place." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css?v=5" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+</head>
+
+<body>
+
+  <!-- ══════════════ SIDEBAR ══════════════ -->
+  <nav class="sidebar" aria-label="Main navigation">
+    <!-- Brand -->
+    <div class="brand-mark" aria-hidden="true">
+      <svg width="22" height="22" viewBox="0 0 26 26" fill="none">
+        <circle cx="13" cy="13" r="13" fill="rgba(255,255,255,0.15)" />
+        <path d="M13 5L20 11v10h-4v-5h-6v5H6V11z" fill="white" />
+      </svg>
+    </div>
+
+    <!-- Ask -->
+    <button class="nav-item active" data-view="ask" id="nav-ask" aria-label="Ask Commander" aria-current="page">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+        stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+      </svg>
+      <span class="nav-tooltip">Ask</span>
+    </button>
+
+    <!-- Travel Itinerary Planner -->
+    <button class="nav-item" data-view="itinerary" id="nav-itinerary" aria-label="Travel Itinerary Planner">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+        stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="1,6 1,22 8,18 16,22 23,18 23,2 16,6 8,2" />
+        <line x1="8" y1="2" x2="8" y2="18" />
+        <line x1="16" y1="6" x2="16" y2="22" />
+      </svg>
+      <span class="nav-tooltip">Itinerary</span>
+    </button>
+
+    <!-- History -->
+    <button class="nav-item" data-view="history" id="nav-history" aria-label="Briefing History">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+        stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10" />
+        <polyline points="12,6 12,12 16,14" />
+      </svg>
+      <span class="nav-tooltip">History</span>
+    </button>
+
+    <!-- Settings -->
+    <button class="nav-item" data-view="settings" id="nav-settings" aria-label="Settings">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+        stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3" />
+        <path
+          d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
+      </svg>
+      <span class="nav-tooltip">Settings</span>
+    </button>
+
+    <!-- Sign out -->
+    <button class="nav-item nav-signout" data-view="signout" aria-label="Sign out">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+        stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
+        <polyline points="16,17 21,12 16,7" />
+        <line x1="21" y1="12" x2="9" y2="12" />
+      </svg>
+      <span class="nav-tooltip">Sign out</span>
+    </button>
+  </nav>
+
+  <!-- ══════════════ MAIN CONTENT ══════════════ -->
+  <div class="main-content">
+
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <span class="eyebrow" id="topbar-eyebrow">LetGO</span>
+        <h1 id="topbar-heading">Good morning — what's your plan?</h1>
+      </div>
+      <div class="top-actions">
+        <div class="time-badge" id="live-time" aria-live="polite">--:-- --</div>
+        <div class="avatar" id="avatar-btn" role="button" tabindex="0" aria-label="Account menu" title="Account">vs
+
+          
+        </div>
+      </div>
+    </header>
+
+    <!-- VIEW ROUTER -->
+
+    <!-- ══ VIEW: ASK ══ -->
+    <div id="view-ask" class="view active-view">
+      <div class="ask-layout">
+
+        <!-- LEFT: Query input + results -->
+        <div class="ask-main">
+
+          <!-- Query form -->
+          <form id="briefing-form" class="query-form" novalidate>
+            <div class="query-input-wrap">
+              <svg class="query-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+              <textarea id="briefing-query" rows="2" required
+                placeholder="e.g. 'Commute from Mumbai to BKC' or 'Weather, news & breakfast with eggs in Delhi'"
+                aria-label="What would you like to know?" aria-describedby="query-hint"></textarea>
+              <button class="submit-btn" type="submit" id="submit-btn" aria-label="Create briefing">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                  stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <line x1="22" y1="2" x2="11" y2="13" />
+                  <polygon points="22,2 15,22 11,13 2,9" />
+                </svg>
+              </button>
+            </div>
+            <div class="query-meta">
+              <p id="query-hint" class="field-hint">
+                Mention a city &middot; request weather, commute, news or breakfast &middot; add ingredients or time
+                limit
+              </p>
+              <div class="name-row">
+                <label for="user-id" class="field-label">Name:</label>
+                <input id="user-id" type="text" value="guest" aria-label="Your name or user ID"
+                  autocomplete="username" />
+              </div>
+            </div>
+          </form>
+
+          <!-- Example prompts -->
+          <div id="example-prompts" class="example-prompts">
+            <span class="example-label">Try asking:</span>
+            <button class="example-chip" data-query="Weather and commute from Mumbai to Bandra Kurla Complex today">
+              🌤 Mumbai → BKC commute
+            </button>
+            <button class="example-chip" data-query="Quick breakfast with eggs under 10 minutes">
+              🍳 Egg breakfast in 10 min
+            </button>
+            <button class="example-chip" data-query="Top news headlines and weather in Delhi">
+              📰 Delhi news &amp; weather
+            </button>
+            <button class="example-chip"
+              data-query="Full briefing from Bangalore to Electronic City: weather, commute, news and breakfast with eggs">
+              ✦ Full Bangalore briefing
+            </button>
+          </div>
+
+          <!-- Intent chips — shown after parse -->
+          <div id="intent-confirm" class="intent-chips hidden" aria-live="polite">
+            <span class="intent-label">Detected:</span>
+            <span class="chip chip-sm" id="chip-location"></span>
+            <span class="chip chip-sm chip-destination hidden" id="chip-destination"></span>
+            <span class="chip chip-sm chip-weather hidden" id="chip-weather">Weather</span>
+            <span class="chip chip-sm chip-commute hidden" id="chip-commute">Commute</span>
+            <span class="chip chip-sm chip-news    hidden" id="chip-news">News</span>
+            <span class="chip chip-sm chip-breakfast hidden" id="chip-breakfast">Breakfast</span>
+            <span class="chip chip-sm chip-itinerary hidden" id="chip-itinerary">Itinerary</span>
+          </div>
+
+          <!-- Results grid -->
+          <div id="results-area" class="results-area hidden" aria-live="polite">
+
+            <!-- Hero weather card -->
+            <section class="card hero-card" id="hero-section" aria-labelledby="hero-title">
+              <div class="card-head">
+                <h2 id="hero-title">Today's Overview</h2>
+                <div class="period-chips" role="group" aria-label="Time period">
+                  <button class="chip chip-active" data-period="morning">Morning</button>
+                  <button class="chip" data-period="afternoon">Afternoon</button>
+                  <button class="chip" data-period="evening">Evening</button>
+                </div>
+              </div>
+              <div class="sparkline-wrap" aria-hidden="true">
+                <div class="callout-bubble" id="hero-callout">
+                  <span class="callout-dot"></span>
+                  <strong id="hero-temp">--&deg;</strong>
+                  <small id="hero-condition">--</small>
+                </div>
+                <svg class="sparkline-svg" id="sparkline-svg" viewBox="0 0 700 120" preserveAspectRatio="none"
+                  role="img" aria-label="Temperature trend">
+                  <defs>
+                    <linearGradient id="uvGrad" x1="0" x2="1" y1="0" y2="0">
+                      <stop offset="0%" stop-color="#34d399" stop-opacity="0.3" />
+                      <stop offset="100%" stop-color="#f06a9a" stop-opacity="0.3" />
+                    </linearGradient>
+                  </defs>
+                  <path id="uv-band" d="" fill="url(#uvGrad)" opacity="0.5" />
+                  <path id="temp-line" d="" fill="none" stroke="#9575fc" stroke-width="3.5" stroke-linecap="round"
+                    stroke-linejoin="round" style="filter:drop-shadow(0 0 8px rgba(149,117,252,.6))" />
+                </svg>
+                <div class="hour-labels" aria-hidden="true">
+                  <span>7 AM</span><span>9 AM</span><span>11 AM</span>
+                  <span class="hl-active">1 PM</span>
+                  <span>3 PM</span><span>5 PM</span><span>7 PM</span>
+                </div>
+              </div>
+              <div class="hero-metrics">
+                <div class="metric">
+                  <small>Temperature</small>
+                  <strong id="metric-temp">--&deg;</strong>
+                  <em id="metric-temp-sub">Current</em>
+                </div>
+                <div class="metric metric-focus">
+                  <small>Commute ETA</small>
+                  <strong id="metric-eta">-- min</strong>
+                  <em id="metric-eta-sub">Drive</em>
+                </div>
+                <div class="metric">
+                  <small>UV Peak</small>
+                  <strong id="metric-uv">--</strong>
+                  <em id="metric-uv-sub">Index</em>
+                </div>
+              </div>
+            </section>
+
+            <!-- Action row: Commute + Meals -->
+            <div class="action-row">
+              <article class="card action-card action-purple" id="commute-card" aria-labelledby="commute-title">
+                <div class="action-icon-wrap" aria-hidden="true">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="1" y="3" width="15" height="13" />
+                    <polygon points="16 8 20 8 23 11 23 16 16 16 16 8" />
+                    <circle cx="5.5" cy="18.5" r="2.5" />
+                    <circle cx="18.5" cy="18.5" r="2.5" />
+                  </svg>
+                </div>
+                <div class="action-body">
+                  <b id="commute-title">Commute Now</b>
+                  <small id="commute-subtitle">Run a briefing to plan route</small>
+                </div>
+                <div class="action-badge action-badge-purple" id="commute-eta-badge">-- min</div>
+                <div class="card-actions">
+                  <button class="icon-btn" aria-label="Refresh commute" data-refresh="commute">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                      stroke-linecap="round">
+                      <path d="M23 4v6h-6" />
+                      <path d="M1 20v-6h6" />
+                      <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" />
+                    </svg>
+                  </button>
+                  <button class="icon-btn" aria-label="Expand commute details" data-expand="commute" id="btn-open-commute-map">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                      stroke-linecap="round">
+                      <polyline points="15,3 21,3 21,9" />
+                      <polyline points="9,21 3,21 3,15" />
+                      <line x1="21" y1="3" x2="14" y2="10" />
+                      <line x1="3" y1="21" x2="10" y2="14" />
+                    </svg>
+                  </button>
+                </div>
+              </article>
+
+              <article class="card action-card action-pink" id="breakfast-card" aria-labelledby="breakfast-title">
+                <div class="action-icon-wrap" id="meal-action-icon-wrap" aria-hidden="true">
+                  <span id="meal-card-icon" style="font-size: 20px;">🍽️</span>
+                </div>
+                <div class="action-body">
+                  <b id="breakfast-title">Meal Idea</b>
+                  <small id="breakfast-subtitle">Run a briefing to get a tailored recipe</small>
+                </div>
+                <div class="action-badge action-badge-pink" id="breakfast-time-badge">-- min</div>
+                <div class="card-actions">
+                  <button class="icon-btn" aria-label="Swap meal suggestion" id="breakfast-swap-btn"
+                    data-swap="breakfast">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                      stroke-linecap="round">
+                      <polyline points="17,1 21,5 17,9" />
+                      <path d="M3 11V9a4 4 0 014-4h14" />
+                      <polyline points="7,23 3,19 7,15" />
+                      <path d="M21 13v2a4 4 0 01-4 4H3" />
+                    </svg>
+                  </button>
+                  <button class="icon-btn" aria-label="Expand meal recipe" data-expand="breakfast">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                      stroke-linecap="round">
+                      <polyline points="15,3 21,3 21,9" />
+                      <polyline points="9,21 3,21 3,15" />
+                      <line x1="21" y1="3" x2="14" y2="10" />
+                      <line x1="3" y1="21" x2="10" y2="14" />
+                    </svg>
+                  </button>
+                </div>
+              </article>
+            </div>
+
+            <!-- Travel Itinerary Card -->
+            <article class="card hero-card hidden" id="itinerary-card"
+              style="margin-top: 16px; border: 1px solid rgba(99,102,241,0.25);">
+              <div class="card-head">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <span style="font-size: 20px;">🗺️</span>
+                  <div>
+                    <h2 id="itinerary-title" style="margin: 0; font-size: 16px; font-weight: 700;">Travel Itinerary</h2>
+                    <small id="itinerary-subtitle" style="color: var(--text-muted);">Custom day-by-day travel
+                      plan</small>
+                  </div>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                  <button class="btn btn-sm" id="btn-share-email" type="button"
+                    style="display: inline-flex; align-items: center; gap: 6px; background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; border: none; padding: 6px 14px; border-radius: 6px; font-weight: 600; cursor: pointer;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2">
+                      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                      <polyline points="22,6 12,13 2,6" />
+                    </svg>
+                    Send via Gmail MCP Tool
+                  </button>
+                </div>
+              </div>
+              <div id="itinerary-content" style="padding-top: 12px;"></div>
+            </article>
+
+            <!-- Mini cards: Weather detail + Headlines + Prep Timer -->
+            <div class="mini-row">
+              <article class="card mini-card" id="weather-mini" aria-labelledby="weather-mini-title">
+                <div class="mini-icon-wrap" aria-hidden="true">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17.5 19H9a7 7 0 110-14 5.5 5.5 0 0111 0z" />
+                  </svg>
+                </div>
+                <h3 id="weather-mini-title">Weather &amp; UV</h3>
+                <p id="weather-mini-sub">--</p>
+                <div class="progress-wrap" aria-label="UV risk">
+                  <div class="progress-track">
+                    <div class="progress-fill progress-uv" id="uv-progress" style="width:0%" role="progressbar"
+                      aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                  </div>
+                  <span class="progress-pct" id="uv-pct">--</span>
+                </div>
+                <footer class="mini-footer">
+                  <small id="weather-mini-foot">--</small>
+                  <button class="pill-btn" aria-label="Refresh weather" data-refresh="weather">Refresh</button>
+                </footer>
+              </article>
+
+              <article class="card mini-card" id="news-mini" aria-labelledby="news-mini-title">
+                <div class="mini-icon-wrap mini-icon-news" aria-hidden="true">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 22h16a2 2 0 002-2V4a2 2 0 00-2-2H8a2 2 0 00-2 2v16a4 4 0 01-4-4V6" />
+                    <line x1="10" y1="7" x2="16" y2="7" />
+                    <line x1="10" y1="11" x2="16" y2="11" />
+                    <line x1="10" y1="15" x2="13" y2="15" />
+                  </svg>
+                </div>
+                <h3 id="news-mini-title">Headlines</h3>
+                <p id="news-mini-sub">--</p>
+                <div class="progress-wrap">
+                  <div class="progress-track">
+                    <div class="progress-fill" id="news-progress" style="width:0%" role="progressbar" aria-valuenow="0"
+                      aria-valuemin="0" aria-valuemax="100"></div>
+                  </div>
+                  <span class="progress-pct" id="news-pct">--</span>
+                </div>
+                <footer class="mini-footer">
+                  <small id="news-mini-foot">--</small>
+                  <button class="pill-btn" aria-label="Refresh news" data-refresh="news">Refresh</button>
+                </footer>
+              </article>
+
+              <article class="card mini-card recipe-steps-card" id="recipe-steps-card"
+                aria-labelledby="recipe-steps-title">
+                <div class="mini-icon-wrap mini-icon-pink" aria-hidden="true">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 11l3 3L22 4" />
+                    <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" />
+                  </svg>
+                </div>
+                <h3 id="recipe-steps-title">Recipe Steps</h3>
+                <p id="recipe-steps-sub" class="recipe-steps-sub">Run a briefing to see cooking steps</p>
+                <ol id="recipe-steps-list" class="recipe-steps-list hidden"></ol>
+                <footer class="mini-footer">
+                  <small id="recipe-steps-foot">--</small>
+                  <button class="pill-btn" id="recipe-steps-expand-btn" aria-label="Expand recipe steps"
+                    data-expand="breakfast">View recipe</button>
+                </footer>
+              </article>
+            </div><!-- /mini-row -->
+
+            <!-- Post-run controls -->
+            <div id="dash-controls" class="dash-controls">
+              <button class="ctrl-btn" id="rerun-btn" aria-label="Re-run all agents">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                  stroke-linecap="round">
+                  <polyline points="23,4 23,10 17,10" />
+                  <path d="M20.49 15a9 9 0 11-2.12-9.36L23 10" />
+                </svg>
+                Re-run all
+              </button>
+              <button class="ctrl-btn" id="save-btn" aria-label="Save this briefing">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                  stroke-linecap="round">
+                  <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" />
+                  <polyline points="17,21 17,13 7,13 7,21" />
+                  <polyline points="7,3 7,8 15,8" />
+                </svg>
+                Save briefing
+              </button>
+              <button class="ctrl-btn ctrl-btn-ghost" id="edit-btn" aria-label="Edit query">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                  stroke-linecap="round">
+                  <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+                  <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+                </svg>
+                Edit query
+              </button>
+            </div>
+
+          </div><!-- /results-area -->
+        </div><!-- /ask-main -->
+
+        <!-- RIGHT: News feed + map -->
+        <aside class="news-panel" id="news-panel" aria-label="Headlines feed">
+          <div class="news-panel-head">
+            <h2>Headlines</h2>
+            <button class="pill-btn" aria-label="Refresh news" data-refresh="news">Refresh</button>
+          </div>
+          <div id="news-feed-panel" class="news-feed-panel">
+            <p class="empty-state">Headlines will appear after your first briefing.</p>
+          </div>
+
+          <!-- Live commute map -->
+          <section class="map-section" aria-label="Live commute map">
+            <div class="map-header">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                stroke-linecap="round" aria-hidden="true">
+                <circle cx="12" cy="10" r="3" />
+                <path d="M12 2a8 8 0 00-8 8c0 5.25 8 14 8 14s8-8.75 8-14a8 8 0 00-8-8z" />
+              </svg>
+              <b>Live commute</b>
+              <span id="map-source-badge" class="map-source-badge hidden"></span>
+            </div>
+            <div id="commute-map" class="commute-map hidden" role="application" aria-label="Commute route map">
+            </div>
+            <p class="map-empty-state" id="map-empty-state">
+              Run a briefing to see your route here.
+            </p>
+          </section>
+        </aside>
+
+      </div><!-- /ask-layout -->
+    </div><!-- /view-ask -->
+
+    <!-- ══ VIEW: HISTORY ══ -->
+    <div id="view-history" class="view hidden">
+      <div class="view-header view-header-row">
+        <div>
+          <h2>Briefing History</h2>
+          <p class="view-sub">Your saved morning briefings</p>
+        </div>
+        <button class="ctrl-btn ctrl-btn-ghost history-clear-btn" id="clear-history-btn" aria-label="Clear all history">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+          </svg>
+          Clear All
+        </button>
+      </div>
+      <div id="history-list" class="history-list">
+        <p class="empty-state">Your morning briefings will show up here once you run your first query.</p>
+      </div>
+    </div>
+
+    <!-- ══ VIEW: SETTINGS ══ -->
+    <div id="view-settings" class="view hidden">
+      <div class="view-header">
+        <h2>Settings</h2>
+        <p class="view-sub">Personalise your daily briefings</p>
+      </div>
+      <form id="settings-form" class="settings-form">
+        <label class="field-label" for="setting-location">Default location</label>
+        <input id="setting-location" type="text" placeholder="e.g. Mumbai, India or Chicago, IL" />
+
+        <label class="field-label" for="setting-units">Units</label>
+        <select id="setting-units">
+          <option value="metric">Metric (&deg;C, km)</option>
+          <option value="imperial">Imperial (&deg;F, miles)</option>
+        </select>
+
+        <label class="field-label">Default sections</label>
+        <div class="checkbox-row">
+          <label><input type="checkbox" value="weather" checked /> Weather</label>
+          <label><input type="checkbox" value="commute" checked /> Commute</label>
+          <label><input type="checkbox" value="news" checked /> News</label>
+          <label><input type="checkbox" value="breakfast" checked /> Breakfast</label>
+          <label><input type="checkbox" value="itinerary" checked /> Itinerary</label>
+        </div>
+
+        <button class="settings-save-btn" type="submit">Save preferences</button>
+      </form>
+    </div>
+
+    <!-- ══ VIEW: ITINERARY PLANNER ══ -->
+    <div id="view-itinerary" class="view hidden">
+      <div class="itinerary-container">
+        <div class="view-header view-header-row">
+          <div>
+            <h2>🗺️ Travel Itinerary Planner</h2>
+            <p class="view-sub">Personalized day-by-day travel itineraries powered by FastMCP tools &amp; NVIDIA NIM
+              LLM.</p>
+          </div>
+          <div class="itinerary-status-badge">
+            <span class="live-pulse"></span>
+            <span>AI Travel Agent Ready</span>
+          </div>
+        </div>
+
+        <!-- Interactive Itinerary Form Card -->
+        <form id="itinerary-planner-form" class="itinerary-form-card" novalidate>
+
+          <!-- Destination Field + Quick Preset Chips -->
+          <div class="itinerary-field-group">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <label for="itinerary-destination-input" class="itinerary-field-label">Destination City / Country</label>
+              <span style="font-size: 11px; color: var(--text-3);">Popular Destinations:</span>
+            </div>
+            <div class="itinerary-input-wrap">
+              <span class="itinerary-input-icon">📍</span>
+              <input type="text" id="itinerary-destination-input" class="itinerary-input" required
+                placeholder="e.g. Srinagar, Bali, Tokyo, Paris, Rome, Goa, New York" autocomplete="off" />
+            </div>
+
+            <!-- Quick Suggestion Chips -->
+            <div class="destination-chips" id="destination-chips">
+              <button type="button" class="dest-chip" data-dest="Srinagar">🏔️ Srinagar</button>
+              <button type="button" class="dest-chip" data-dest="Bali, Indonesia">🏖️ Bali</button>
+              <button type="button" class="dest-chip" data-dest="Tokyo, Japan">⛩️ Tokyo</button>
+              <button type="button" class="dest-chip" data-dest="Goa, India">🌴 Goa</button>
+              <button type="button" class="dest-chip" data-dest="Paris, France">🗼 Paris</button>
+              <button type="button" class="dest-chip" data-dest="Rome, Italy">🏛️ Rome</button>
+              <button type="button" class="dest-chip" data-dest="Dubai, UAE">🕌 Dubai</button>
+              <button type="button" class="dest-chip" data-dest="New York, USA">🗽 New York</button>
+            </div>
+          </div>
+
+          <!-- Trip Duration & Budget Pill Selectors -->
+          <div class="itinerary-options-grid">
+
+            <!-- Duration -->
+            <div class="itinerary-option-block">
+              <label class="itinerary-field-label">Trip Duration</label>
+              <input type="hidden" id="itinerary-days-select" value="3" />
+              <div class="pill-group" id="duration-pills">
+                <button type="button" class="pill-btn" data-val="1">1 Day</button>
+                <button type="button" class="pill-btn" data-val="2">2 Days</button>
+                <button type="button" class="pill-btn pill-active" data-val="3">3 Days</button>
+                <button type="button" class="pill-btn" data-val="4">4 Days</button>
+                <button type="button" class="pill-btn" data-val="5">5 Days</button>
+                <button type="button" class="pill-btn" data-val="7">7 Days</button>
+              </div>
+            </div>
+
+            <!-- Budget Level -->
+            <div class="itinerary-option-block">
+              <label class="itinerary-field-label">Budget Level</label>
+              <input type="hidden" id="itinerary-budget-select" value="moderate" />
+              <div class="pill-group" id="budget-pills">
+                <button type="button" class="pill-btn" data-val="budget">🎒 Budget</button>
+                <button type="button" class="pill-btn pill-active" data-val="moderate">⚖️ Moderate</button>
+                <button type="button" class="pill-btn" data-val="luxury">👑 Luxury</button>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Submit Button -->
+          <div
+            style="display: flex; justify-content: flex-end; align-items: center; gap: 14px; margin-top: 8px; border-top: 1px solid var(--border); padding-top: 16px;">
+            <span style="font-size: 11.5px; color: var(--text-3); display: flex; align-items: center; gap: 6px;">
+              <span>⚡ FastMCP Live Search</span> &bull; <span>🧠 NVIDIA NIM Reasoning</span>
+            </span>
+            <button type="submit" id="btn-generate-itinerary" class="generate-itinerary-btn">
+              <span class="btn-icon">✦</span>
+              <span class="btn-text">Generate Itinerary</span>
+            </button>
+          </div>
+        </form>
+
+        <!-- Result Container -->
+        <div id="view-itinerary-result" class="hidden" aria-live="polite">
+          <!-- Rendered itinerary card will appear here -->
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /main-content -->
+
+  <!-- Commute Drawer (Ola/Uber Style) -->
+  <div id="commute-drawer" class="drawer hidden" role="dialog" aria-modal="true" aria-labelledby="drawer-title">
+    <div class="drawer-backdrop" id="drawer-backdrop"></div>
+    <div class="drawer-panel" id="drawer-panel">
+      <div class="drawer-header">
+        <h2 id="drawer-title">Commute Now</h2>
+        <button class="drawer-close" aria-label="Close" id="drawer-close" type="button">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="drawer-content">
+        <form id="drawer-form" class="drawer-form" novalidate>
+          <div class="drawer-input-group">
+            <label for="drawer-from" class="drawer-input-label">Origin Location</label>
+            <div class="drawer-input-wrapper">
+              <span class="drawer-icon">📍</span>
+              <input type="text" id="drawer-from" required placeholder="Enter pickup location (e.g. Mumbai)"
+                aria-label="Pickup location" />
+            </div>
+          </div>
+
+          <div class="drawer-input-group">
+            <label for="drawer-to" class="drawer-input-label">Destination</label>
+            <div class="drawer-input-wrapper">
+              <span class="drawer-icon">🏁</span>
+              <input type="text" id="drawer-to" required placeholder="Enter destination (e.g. Bandra)"
+                aria-label="Destination" />
+            </div>
+          </div>
+
+          <div class="drawer-mode-group">
+            <span class="drawer-input-label">Mode of Transportation</span>
+            <div class="drawer-modes" id="drawer-modes" role="radiogroup" aria-label="Transportation Mode">
+              <button type="button" class="drawer-mode-btn mode-active" data-mode="drive" role="radio"
+                aria-checked="true">🚗 Drive</button>
+              <button type="button" class="drawer-mode-btn" data-mode="transit" role="radio" aria-checked="false">🚌
+                Transit</button>
+              <button type="button" class="drawer-mode-btn" data-mode="bike" role="radio" aria-checked="false">🚲
+                Bike</button>
+              <button type="button" class="drawer-mode-btn" data-mode="walk" role="radio" aria-checked="false">🚶
+                Walk</button>
+            </div>
+          </div>
+
+          <button type="submit" class="drawer-submit-btn" id="drawer-submit">Get Live Route</button>
+        </form>
+
+        <!-- Live Map inside the Drawer (always visible) -->
+        <div class="drawer-map-container" style="margin-top: 16px;">
+          <div id="drawer-map" style="width:100%; height:320px; border-radius:12px;"></div>
+        </div>
+
+        <!-- Results Area -->
+        <div id="drawer-results" class="drawer-results hidden">
+
+          <!-- Route Strip (Ola/Uber Style) -->
+          <div class="route-strip">
+            <div class="route-metric">
+              <span class="metric-label">ETA</span>
+              <span class="metric-val" id="drawer-eta">-- min</span>
+            </div>
+            <div class="route-metric">
+              <span class="metric-label">Distance</span>
+              <span class="metric-val" id="drawer-distance">-- km</span>
+            </div>
+            <div class="route-metric">
+              <span class="metric-label">Accuracy</span>
+              <span class="metric-val" id="drawer-source" style="font-size:14px; text-transform:uppercase;">--</span>
+            </div>
+          </div>
+
+          <div id="drawer-alerts" class="drawer-alerts"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detail modal -->
+  <div id="detail-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-backdrop" id="modal-backdrop"></div>
+    <div class="modal-box" id="modal-box">
+      <div class="modal-head">
+        <h2 id="modal-title">Details</h2>
+        <button class="modal-close" aria-label="Close" id="modal-close" type="button">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      </div>
+      <div id="modal-body" class="modal-body"></div>
+    </div>
+  </div>
+
+  <!-- Map modal (Centered map view) -->
+  <div id="map-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="map-modal-title">
+    <div class="modal-backdrop" id="map-modal-backdrop"></div>
+    <div class="modal-box" id="map-modal-box" style="width: min(800px, 95%); max-height: 90vh;">
+      <div class="modal-head">
+        <h2 id="map-modal-title">Live Commute Route Map</h2>
+        <button class="modal-close" aria-label="Close" id="map-modal-close" type="button">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body" style="padding: 16px;">
+        <div id="modal-map"
+          style="width: 100%; height: 500px; border-radius: var(--r-sm); border: 1px solid var(--border);"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Email Share modal -->
+  <div id="email-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="email-modal-title">
+    <div class="modal-backdrop" id="email-modal-backdrop"></div>
+    <div class="modal-box" id="email-modal-box" style="width: min(520px, 92%); padding: 24px;">
+      <div class="modal-head" style="margin-bottom: 16px;">
+        <h2 id="email-modal-title" style="display: flex; align-items: center; gap: 8px; font-size: 18px;">
+          ✉️ Send via Gmail MCP Tool
+        </h2>
+        <button class="modal-close" aria-label="Close" id="email-modal-close" type="button">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      </div>
+      <form id="email-share-form" style="display: flex; flex-direction: column; gap: 14px;">
+        <div>
+          <label
+            style="display: block; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 6px;">
+            Recipient Email Address
+          </label>
+          <input type="email" id="email-recipient-input" placeholder="traveler@example.com" required
+            style="width: 100%; padding: 10px 14px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-primary); font-size: 14px;" />
+        </div>
+        <div>
+          <label
+            style="display: block; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 6px;">
+            Subject Line
+          </label>
+          <input type="text" id="email-subject-input" value="Your Travel Itinerary & Morning Briefing" required
+            style="width: 100%; padding: 10px 14px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-primary); font-size: 14px;" />
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+          <button type="button" class="btn btn-outline" id="email-modal-cancel"
+            style="padding: 8px 16px; border-radius: 6px; cursor: pointer;">Cancel</button>
+          <button type="submit" class="btn" id="email-submit-btn"
+            style="padding: 8px 18px; border-radius: 6px; background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; border: none; font-weight: 600; cursor: pointer;">
+            Send Email
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="toast hidden" role="alert" aria-live="assertive"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="app.js"></script>
+
+  <!-- Live clock script -->
+  <script>
+    (function () {
+      function updateClock() {
+        const el = document.getElementById('live-time');
+        if (!el) return;
+        const now = new Date();
+        const h = now.getHours(), m = now.getMinutes();
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        const h12 = h % 12 || 12;
+        el.textContent = h12 + ':' + String(m).padStart(2, '0') + ' ' + ampm;
+      }
+      updateClock();
+      setInterval(updateClock, 10000);
+    })();
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,31 @@
+[
+  {
+    "id": "syn_01_weather_commute",
+    "query": "Weather in Chicago and traffic to Evanston",
+    "context": {
+      "weather": { "temp": 18, "condition": "Partly Cloudy", "high": 21, "low": 14 },
+      "commute": { "recommended_mode": "drive", "eta_minutes": 35, "distance_km": 22.5 }
+    },
+    "key_facts": ["18", "Partly Cloudy", "35", "drive", "22.5"],
+    "required_topics": ["weather", "commute"]
+  },
+  {
+    "id": "syn_02_breakfast_news",
+    "query": "News and egg breakfast",
+    "context": {
+      "news": { "headlines": [{"title": "Global Tech Summit Opens in Tokyo"}] },
+      "breakfast": { "recipe_name": "Scrambled Eggs with Chives", "prep_time_minutes": 7 }
+    },
+    "key_facts": ["Global Tech Summit", "Scrambled Eggs", "7"],
+    "required_topics": ["news", "breakfast"]
+  },
+  {
+    "id": "syn_03_itinerary",
+    "query": "2-day trip to Rome",
+    "context": {
+      "itinerary": { "location": "Rome", "days_count": 2, "days": [{"day": 1, "theme": "Ancient Rome"}] }
+    },
+    "key_facts": ["Rome", "2", "Ancient Rome"],
+    "required_topics": ["itinerary"]
+  }
+]

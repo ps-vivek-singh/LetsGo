@@ -1,0 +1,82 @@
+[
+  {
+    "id": "neg_01_exclude_commute_and_recipe",
+    "category": "explicit_exclusion",
+    "query": "Give me weather and news for Miami, but do not give me any commute or breakfast recipes",
+    "expected_intents": ["weather", "news"],
+    "excluded_intents": ["commute", "breakfast"],
+    "forbidden_tools": ["get_commute_route", "get_recipe"]
+  },
+  {
+    "id": "neg_02_skip_weather",
+    "category": "explicit_exclusion",
+    "query": "I don't need the weather forecast today, just show my commute route from Brooklyn to Queens and latest news",
+    "expected_intents": ["commute", "news"],
+    "excluded_intents": ["weather"],
+    "forbidden_tools": ["get_weather"]
+  },
+  {
+    "id": "neg_03_skip_food_and_news",
+    "category": "explicit_exclusion",
+    "query": "Skip breakfast and skip news, only give me traffic to Seattle downtown and current weather",
+    "expected_intents": ["commute", "weather"],
+    "excluded_intents": ["breakfast", "news"],
+    "forbidden_tools": ["get_recipe", "get_headlines"]
+  },
+  {
+    "id": "neg_04_news_only_no_weather_commute",
+    "category": "explicit_exclusion",
+    "query": "Show top world headlines without weather or commute advice",
+    "expected_intents": ["news"],
+    "excluded_intents": ["weather", "commute"],
+    "forbidden_tools": ["get_weather", "get_commute_route"]
+  },
+  {
+    "id": "neg_05_dinner_only_no_travel",
+    "category": "explicit_exclusion",
+    "query": "Give me a quick 10-minute dinner recipe with chicken, but no weather, no news, and no travel itinerary",
+    "expected_intents": ["breakfast"],
+    "excluded_intents": ["weather", "news", "itinerary", "commute"],
+    "forbidden_tools": ["get_weather", "get_headlines", "get_itinerary", "get_commute_route"]
+  },
+  {
+    "id": "neg_06_itinerary_without_commute_breakfast",
+    "category": "explicit_exclusion",
+    "query": "Plan a 3-day itinerary for Tokyo without commute or breakfast suggestions",
+    "expected_intents": ["itinerary"],
+    "excluded_intents": ["commute", "breakfast"],
+    "forbidden_tools": ["get_commute_route", "get_recipe"]
+  },
+  {
+    "id": "neg_07_temporal_past_meal_negation",
+    "category": "temporal_negation",
+    "query": "I already ate eggs and oats for breakfast so no food recommendation please. Just check traffic to Austin downtown.",
+    "expected_intents": ["commute"],
+    "excluded_intents": ["breakfast"],
+    "forbidden_tools": ["get_recipe"]
+  },
+  {
+    "id": "neg_08_out_of_scope_coding",
+    "category": "out_of_scope",
+    "query": "Write a Python script to compute the Fibonacci series recursively",
+    "expected_intents": [],
+    "excluded_intents": ["weather", "news", "commute", "breakfast", "itinerary"],
+    "forbidden_tools": ["get_weather", "get_commute_route", "get_recipe", "get_itinerary", "get_headlines"]
+  },
+  {
+    "id": "neg_09_out_of_scope_stocks",
+    "category": "out_of_scope",
+    "query": "What is the current stock price and market cap of Apple AAPL?",
+    "expected_intents": [],
+    "excluded_intents": ["weather", "news", "commute", "breakfast", "itinerary"],
+    "forbidden_tools": ["get_weather", "get_commute_route", "get_recipe", "get_itinerary", "get_headlines"]
+  },
+  {
+    "id": "neg_10_out_of_scope_translation",
+    "category": "out_of_scope",
+    "query": "Translate the sentence 'Good morning how are you' into Spanish and German",
+    "expected_intents": [],
+    "excluded_intents": ["weather", "news", "commute", "breakfast", "itinerary"],
+    "forbidden_tools": ["get_weather", "get_commute_route", "get_recipe", "get_itinerary", "get_headlines"]
+  }
+]

@@ -1,0 +1,122 @@
+[
+  {
+    "id": "q01_single_weather",
+    "query": "What is the weather in Chicago today?",
+    "expected_intents": ["weather"],
+    "expected_slots": { "location": "Chicago" }
+  },
+  {
+    "id": "q02_single_news",
+    "query": "Show me the latest top headlines",
+    "expected_intents": ["news"],
+    "expected_slots": {}
+  },
+  {
+    "id": "q03_single_commute",
+    "query": "How is traffic from Brooklyn to Manhattan?",
+    "expected_intents": ["commute"],
+    "expected_slots": { "location": "Brooklyn", "destination": "Manhattan" }
+  },
+  {
+    "id": "q04_single_breakfast",
+    "query": "Give me a quick 10-minute breakfast recipe with eggs and toast",
+    "expected_intents": ["breakfast"],
+    "expected_slots": { "ingredients": ["eggs", "toast"], "time_constraint": "10 min", "meal_type": "breakfast" }
+  },
+  {
+    "id": "q05_single_itinerary",
+    "query": "Plan a 3-day travel itinerary for Paris with sightseeing and food",
+    "expected_intents": ["itinerary"],
+    "expected_slots": { "location": "Paris", "days": 3 }
+  },
+  {
+    "id": "q06_multi_weather_commute",
+    "query": "Check the forecast in Seattle and driving time to Bellevue",
+    "expected_intents": ["weather", "commute"],
+    "expected_slots": { "location": "Seattle", "destination": "Bellevue" }
+  },
+  {
+    "id": "q07_multi_weather_breakfast",
+    "query": "What is the temperature in Miami and what should I cook with avocado and spinach for lunch?",
+    "expected_intents": ["weather", "breakfast"],
+    "expected_slots": { "location": "Miami", "ingredients": ["avocado", "spinach"], "meal_type": "lunch" }
+  },
+  {
+    "id": "q08_multi_morning_trio",
+    "query": "Morning briefing: weather in Boston, latest tech news, and route to Cambridge",
+    "expected_intents": ["weather", "news", "commute"],
+    "expected_slots": { "location": "Boston", "destination": "Cambridge" }
+  },
+  {
+    "id": "q09_multi_quad_full",
+    "query": "Give me weather for Austin, commute to Downtown, news headlines, and quick dinner with chicken",
+    "expected_intents": ["weather", "commute", "news", "breakfast"],
+    "expected_slots": { "location": "Austin", "destination": "Downtown", "ingredients": ["chicken"], "meal_type": "dinner" }
+  },
+  {
+    "id": "q10_itinerary_with_weather",
+    "query": "I am traveling to Tokyo for 2 days. What is the forecast and trip plan?",
+    "expected_intents": ["weather", "itinerary"],
+    "expected_slots": { "location": "Tokyo", "days": 2 }
+  },
+  {
+    "id": "q11_commute_transit",
+    "query": "Transit route from Queens to JFK Airport",
+    "expected_intents": ["commute"],
+    "expected_slots": { "location": "Queens", "destination": "JFK Airport" }
+  },
+  {
+    "id": "q12_breakfast_vegan",
+    "query": "Quick 15 min breakfast with oats, banana and milk",
+    "expected_intents": ["breakfast"],
+    "expected_slots": { "ingredients": ["oats", "banana", "milk"], "meal_type": "breakfast" }
+  },
+  {
+    "id": "q13_weather_uv",
+    "query": "What is the UV index and temperature in Phoenix?",
+    "expected_intents": ["weather"],
+    "expected_slots": { "location": "Phoenix" }
+  },
+  {
+    "id": "q14_news_updates",
+    "query": "Give me the latest news updates and top stories",
+    "expected_intents": ["news"],
+    "expected_slots": {}
+  },
+  {
+    "id": "q15_dinner_time_constraint",
+    "query": "I need a 20-minute dinner recipe with salmon and rice",
+    "expected_intents": ["breakfast"],
+    "expected_slots": { "ingredients": ["salmon", "rice"], "meal_type": "dinner", "time_constraint": "20 min" }
+  },
+  {
+    "id": "q16_commute_eta",
+    "query": "What is the ETA driving from San Francisco to Oakland?",
+    "expected_intents": ["commute"],
+    "expected_slots": { "location": "San Francisco", "destination": "Oakland" }
+  },
+  {
+    "id": "q17_vacation_itinerary",
+    "query": "Create a 4-day vacation trip plan for Rome with places to visit",
+    "expected_intents": ["itinerary"],
+    "expected_slots": { "location": "Rome", "days": 4 }
+  },
+  {
+    "id": "q18_weather_rain",
+    "query": "Is it going to rain in London today?",
+    "expected_intents": ["weather"],
+    "expected_slots": { "location": "London" }
+  },
+  {
+    "id": "q19_all_agents_combo",
+    "query": "Daily report: weather in Denver, driving to Boulder, world headlines, and 10 min breakfast with eggs",
+    "expected_intents": ["weather", "commute", "news", "breakfast"],
+    "expected_slots": { "location": "Denver", "destination": "Boulder", "ingredients": ["eggs"] }
+  },
+  {
+    "id": "q20_snack_query",
+    "query": "Give me a healthy 5 min snack recipe with tomato and cheese",
+    "expected_intents": ["breakfast"],
+    "expected_slots": { "ingredients": ["tomato", "cheese"], "meal_type": "snack" }
+  }
+]
