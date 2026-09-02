@@ -13,11 +13,7 @@
 
 ## 1. Executive Summary
 
-<<<<<<< HEAD
-**LetsGo** is a modular, autonomous multi-agent application that orchestrates specialist AI agents to provide comprehensive, context-aware daily briefings and personalized travel itiner[...]
-=======
 **LetsGo** is a modular, autonomous multi-agent application that orchestrates specialist AI agents to provide comprehensive, context-aware daily briefings and personalized travel itineraries. Combining a zero-dependency **NLP Query Parser**, an explicit **ReAct (Reason + Act) Control Loop**, standard **Model Context Protocol (FastMCP)** tool servers, a multi-factor **Cross-Domain Reflection Engine**, and a conversational **Response Synthesizer**, the application generates actionable, highly tailored daily intelligence.
->>>>>>> 48e8ce8 (feat: Upgrade LetsGo with standards-compliant remote MCP architecture, LetsGo rebrand, and SMTP port 465 SSL fallback)
 
 The application functions across three distinct operating environments:
 1. **Interactive Command-Line Interface (CLI)**: High-speed terminal interaction for automated scripts and headless environments.
@@ -29,25 +25,19 @@ The application functions across three distinct operating environments:
 ## 2. Core Architectural Pillars
 
 ```
-<<<<<<< HEAD
-┌────────────────────────────────────────────────────────────────�[...]
-│                                 LetsGo                                │
-├─────────────────────────┬───────────────────────────────┬──────�[...]
-=======
 ┌──────────────────────────────────────────────────────────────────────────────────┐
-│                                    LETSGO                                       │
+│                                    LETSGO                                        │
 ├─────────────────────────┬───────────────────────────────┬────────────────────────┤
->>>>>>> 48e8ce8 (feat: Upgrade LetsGo with standards-compliant remote MCP architecture, LetsGo rebrand, and SMTP port 465 SSL fallback)
 │   1. NLP INTENT ENGINE  │     2. MULTI-AGENT SYSTEM     │   3. FASTMCP TOOL MESH │
 │  • Regex + Pattern Match│  • ReAct Agentic Loop (7-Step)│  • FastMCP Tool Servers│
 │  • Zero-ML Instant Start│  • Multi-Factor Reflection    │  • LLM Engine (NVIDIA) │
 │  • Multi-Entity Extract │  • NL Response Synthesizer    │  • Gmail SMTP Dispatch │
-├─────────────────────────┼───────────────────────────────┼──────�[...]
+├─────────────────────────┼───────────────────────────────┼────────────────────────┤
 │   4. REAL-TIME STREAM   │     5. PERSISTENCE & STATE    │   6. DUAL INTERFACES   │
 │  • Server-Sent Events   │  • SQLite DB (WAL Mode)       │  • Responsive Web Dash │
 │  • Thread-Parallel Exec │  • Transactional History      │  • Interactive CLI Tool│
 │  • Progressive Rendering│  • Settings Storage Engine    │  • Leaflet Route Maps  │
-└─────────────────────────┴───────────────────────────────┴────────────────────────────────────
+└─────────────────────────┴───────────────────────────────┴────────────────────────┘
 ```
 
 ---
@@ -58,11 +48,11 @@ LetsGo distributes tasks across five specialist autonomous agents, each maintain
 
 | Agent | Module | Description | Primary Data Sources / Tools |
 |---|---|---|---|
-| **WeatherAgent** | `src/agents/weather_agent.py` | Fetches real-time temperature, condition labels, UV index peaks, high/low summaries, and 12-hour hourly trends. | Open-Meteo API, OpenWeatherMa[...]
-| **CommuteAgent** | `src/agents/commute_agent.py` | Resolves geocoded coordinates for origins and destinations, calculates multi-modal ETAs (Drive, Transit, Bike, Walk), identifies traffic delays[...]
-| **MealAgent** | `src/agents/breakfast_agent.py` | Dynamically generates non-repeating, chef-crafted recipes for **Breakfast, Lunch, Dinner, and Snacks**. Strictly features user ingredients, mini[...]
-| **NewsAgent** | `src/agents/news_agent.py` | Aggregates verified top headlines with publisher attribution, publication timestamps, and direct clickable article URLs. | NewsAPI, Multi-Feed RSS (B[...]
-| **ItineraryAgent** | `src/agents/itinerary_agent.py` | Creates multi-day travel plans with morning, afternoon, evening activities, locations, dining recommendations, and budget options. | NVIDIA[...]
+| **WeatherAgent** | `src/agents/weather_agent.py` | Fetches real-time temperature, condition labels, UV index peaks, high/low summaries, and 12-hour hourly trends. | Open-Meteo API, OpenWeatherMap API |
+| **CommuteAgent** | `src/agents/commute_agent.py` | Resolves geocoded coordinates for origins and destinations, calculates multi-modal ETAs (Drive, Transit, Bike, Walk), identifies traffic delays and provides travel alerts. | TomTom Routing API, OpenRouteService API |
+| **MealAgent** | `src/agents/breakfast_agent.py` | Dynamically generates non-repeating, chef-crafted recipes for **Breakfast, Lunch, Dinner, and Snacks**. Strictly features user ingredients, prep times, and dietary restrictions. | NVIDIA NIM / Groq / OpenAI LLMs, Dynamic Recipe Generator |
+| **NewsAgent** | `src/agents/news_agent.py` | Aggregates verified top headlines with publisher attribution, publication timestamps, and direct clickable article URLs. | NewsAPI, Multi-Feed RSS (BBC, CNN, NYT, Reuters) |
+| **ItineraryAgent** | `src/agents/itinerary_agent.py` | Creates multi-day travel plans with morning, afternoon, evening activities, locations, dining recommendations, and budget options. | NVIDIA NIM / Groq LLMs, FastMCP Travel Tools |
 
 ---
 
@@ -82,8 +72,8 @@ src/mcp_tools/
 ```
 
 ### In-Process vs. Standalone Execution
-- **In-Process Agent Dispatch**: `RealMCPServer` wraps FastMCP instances directly in Python memory, enabling zero-network-overhead tool discovery (`list_tools()`), health validation (`health_check[...]
-- **Standalone Server Deployment**: Any tool file can be run directly (e.g., `python src/mcp_tools/email_tools.py`) to launch an independent MCP server for external client integration over standar[...]
+- **In-Process Agent Dispatch**: `RealMCPServer` wraps FastMCP instances directly in Python memory, enabling zero-network-overhead tool discovery (`list_tools()`), health validation (`health_check()`), and dynamic tool execution across all domains.
+- **Standalone Server Deployment**: Any tool file can be run directly (e.g., `python src/mcp_tools/email_tools.py`) to launch an independent MCP server for external client integration over standard input/output (stdio) or HTTP/SSE.
 
 ---
 
@@ -136,7 +126,7 @@ sequenceDiagram
 ## 6. Repository Layout
 
 ```
-L2-Project/
+LetsGo/
 ├── src/
 │   ├── agents/                  # Autonomous specialist agents
 │   │   ├── agentic_loop.py      # ReAct state machine & trace executor
@@ -232,8 +222,8 @@ L2-Project/
 
 ### 2. Clone and Install Dependencies
 ```bash
-git clone <repository-url>
-cd L2-Project
+git clone https://github.com/ps-vivek-singh/LetsGo.git
+cd LetsGo
 pip install -r requirements.txt
 ```
 
@@ -261,7 +251,7 @@ GMAIL_USER=your_sender_email@gmail.com
 GMAIL_APP_PASSWORD=xxxx-xxxx-xxxx-xxxx
 RECIPIENT_EMAIL=default_recipient@gmail.com
 SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
+SMTP_PORT=465
 ```
 
 > **Note**: Free, zero-configuration public fallbacks (Open-Meteo, RSS feeds, deterministic chef engine, advisory routing) are automatically active if API keys are omitted.
@@ -318,17 +308,18 @@ python -m evals.runner --category judge
 The application embeds zero-overhead, production-grade observability via `src/services/telemetry.py`:
 
 ```
-┌────────────────────────────────────────────────────────────────[...]
-│                       OBSERVABILITY & TELEMETRY ENGINE                      │
-├─────────────────────────┬─────────────────────────┬────────────[...]
-│    DUAL-MODE LOGGING    │    WATERFALL SPANS      │   REAL-TIME METRICS API │
-│  • ANSI Console Colors  │  • ReAct Step Profiling │  • GET /api/observability│
-│  • data/telemetry/app.log│  • Tool Latency Timing  │    /metrics             │
-│  • traces.jsonl Records │  • Token Usage & Costs  │  • GET /traces          │
-└─────────────────────────┴─────────────────────────┴────────────[...]
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│                       OBSERVABILITY & TELEMETRY ENGINE                           │
+├─────────────────────────┬─────────────────────────┬──────────────────────────────┤
+│    DUAL-MODE LOGGING    │    WATERFALL SPANS      │    REAL-TIME METRICS API     │
+│  • ANSI Console Colors  │  • ReAct Step Profiling │  • GET /api/observability    │
+│  • data/telemetry/app.log│ • Tool Latency Timing  │    /metrics                  │
+│  • traces.jsonl Records │  • Token Usage & Costs  │  • GET /api/observability    │
+│                         │                         │    /traces                   │
+└─────────────────────────┴─────────────────────────┴──────────────────────────────┘
 ```
 
-- **Dual-Mode Logger**: Real-time ANSI colored terminal output for developers (`[AGENT]`, `[TOOL]`, `[LLM]`, `[REFLECTION]`) and persistent structured files (`data/telemetry/app.log`, `data/telem[...]
+- **Dual-Mode Logger**: Real-time ANSI colored terminal output for developers (`[AGENT]`, `[TOOL]`, `[LLM]`, `[REFLECTION]`) and persistent structured log files (`data/telemetry/app.log`, `data/telemetry/traces.jsonl`).
 - **OpenTelemetry-Compatible Spans**: `trace_span()` context manager tracks durations, argument payloads, status codes, and errors across every perception, tool invocation, and LLM call.
 - **REST Telemetry APIs**:
   - `GET /api/observability/metrics` — Latency percentiles (P50, P95), tool counts per server, token consumption, error rates.
@@ -361,7 +352,7 @@ LetsGo incorporates an evaluation suite (`evals/`) testing agent intelligence ac
 3. **Reflection Matrix** (`eval_reflection.py`): Tests 5 cross-domain safety and consistency rules.
 4. **LLM Faithfulness Judge** (`eval_llm_judge.py`): Automated LLM-as-a-judge scoring factual faithfulness and completeness.
 5. **Adversarial & OOD Cases** (`eval_adversarial.py`): Slang transit, weather metaphors, multi-constraint recipe dumps, and triple-conflict edge cases.
-6. **Negative Constraints** (`eval_negative.py`): Explicit exclusions (*"skip news"*, *"no commute"*), past temporal negations (*"already ate breakfast"*), and out-of-scope queries (*"write pytho[...]")
+6. **Negative Constraints** (`eval_negative.py`): Explicit exclusions (*"skip news"*, *"no commute"*), past temporal negations (*"already ate breakfast"*), and out-of-scope queries (*"write python script"*).
 7. **Complex Multi-Tool Orchestration** (`eval_multitool.py`): 3-tool and 4-tool multi-agent pipelines with order validation and execution efficiency.
 
 ---
