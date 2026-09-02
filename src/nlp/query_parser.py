@@ -182,7 +182,7 @@ class QueryParser:
         _dest_noise = {"work", "office", "school", "college", "home", "my", "the", "a", "an", "budget", "moderate", "luxury", "cheap"}
 
         match = re.search(
-            r"\bfrom\s+(?:the\s+)?([a-zA-Z\s,]+?)\s+to\s+([a-zA-Z\s,]+?)(?:\s+(?:today|tomorrow|this|please|and|how|for|in\s+a|with|,|$)|\s*$)",
+            r"\bfrom\s+(?:the\s+)?([a-zA-Z\s,]+?)\s+to\s+([a-zA-Z\s,]+?)(?:\s*[:;,]|\s+(?:today|tomorrow|this|please|and|how|for|in\s+a|with)|$)",
             query, re.IGNORECASE,
         )
         if match:
@@ -192,7 +192,7 @@ class QueryParser:
                 return " ".join(words).title()
 
         match = re.search(
-            r"\b(?:heading(?:\s+out)?|going)\s+to\s+([a-zA-Z\s,]+?)(?:\s+(?:today|tomorrow|this|please|and|how|for|in\s+a|with|,|$)|\s*$)",
+            r"\b(?:heading(?:\s+out)?|going)\s+to\s+([a-zA-Z\s,]+?)(?:\s*[:;,]|\s+(?:today|tomorrow|this|please|and|how|for|in\s+a|with)|$)",
             query, re.IGNORECASE,
         )
         if match:
@@ -204,7 +204,7 @@ class QueryParser:
         # If this is an itinerary query (e.g. "plan a trip to Bali"), don't treat it as a commute destination
         if not re.search(r"\b(?:trip|vacation|itinerary|sightseeing|travel plan)\b", query, re.IGNORECASE):
             match = re.search(
-                r"\bto\s+([a-zA-Z\s,]+?)(?:\s+(?:today|tomorrow|this|please|and|how|for|in\s+a|with|,|$)|\s*$)",
+                r"\bto\s+([a-zA-Z\s,]+?)(?:\s*[:;,]|\s+(?:today|tomorrow|this|please|and|how|for|in\s+a|with)|$)",
                 query, re.IGNORECASE,
             )
             if match:
