@@ -47,75 +47,97 @@ def _clean_search_term(term: str) -> str:
     return cleaned if cleaned else t
 
 
-def _parse_rss(url: str, source_name: str) -> list[dict]:
+def _is_english(text: str) -> bool:
+    """Verify that a headline title is English (Latin script)."""
+    if not text:
+        return False
+    alpha = [c for c in text if c.isalpha()]
+    if not alpha:
+        return True
+    ascii_alpha = [c for c in alpha if c.isascii()]
+    return (len(ascii_alpha) / len(alpha)) > 0.85
+
+
+def _parse_rss(url: str, source_name: str, location_filter: str = "") -> list[dict]:
     """Fetch an RSS feed and return structured article dicts with URLs."""
-    r = requests.get(url, timeout=10, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) LetsGo/1.0"})
+    r = requests.get(url, timeout=10, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"})
     r.raise_for_status()
 
-    # Strip any BOM or leading whitespace that can break the XML parser
-    text = r.text.strip().lstrip("\ufeff")
-    root = ET.fromstring(text)
+    # Parse raw bytes directly so XML encoding declaration works natively
+    root = ET.fromstring(r.content)
 
     items: list[dict] = []
-    # Both Atom (<entry>) and RSS (<item>) shapes
-    for tag in ("item", "{http://www.w3.org/2005/Atom}entry"):
-        for entry in root.iter(tag):
-            title_el = (
-                entry.find("title")
-                or entry.find("{http://www.w3.org/2005/Atom}title")
-            )
-            link_el = (
-                entry.find("link")
-                or entry.find("{http://www.w3.org/2005/Atom}link")
-            )
-            pub_el = (
-                entry.find("pubDate")
-                or entry.find("{http://www.w3.org/2005/Atom}published")
-            )
-            source_el = (
-                entry.find("source")
-                or entry.find("{http://www.w3.org/2005/Atom}source")
-            )
+    fallback_items: list[dict] = []
+    loc_lower = location_filter.lower().strip() if location_filter else ""
 
-            title = title_el.text.strip() if title_el is not None and title_el.text else None
-            if not title:
-                continue
+    # Search for item elements in feed
+    for entry in root.findall(".//item"):
+        title_el = entry.find("title")
+        link_el = entry.find("link")
+        pub_el = entry.find("pubDate")
+        source_el = entry.find("source")
 
-            # <link> in RSS is text; in Atom it's an attribute
-            link: str | None = None
-            if link_el is not None:
-                link = (link_el.text or "").strip() or link_el.get("href", "")
-                link = link or None
+        title = title_el.text.strip() if title_el is not None and title_el.text else None
+        if not title:
+            continue
 
-            pub = pub_el.text.strip() if pub_el is not None and pub_el.text else _now_iso()
+        # Ensure headline is in English
+        if not _is_english(title):
+            continue
 
-            # Dynamic source name (e.g. from Google News RSS feed)
-            actual_source = source_el.text.strip() if source_el is not None and source_el.text else source_name
+        link: str | None = None
+        if link_el is not None:
+            link = (link_el.text or "").strip() or link_el.get("href", "")
+            link = link or None
 
-            items.append({
-                "title":        title,
-                "source":       actual_source,
-                "url":          link,
-                "published_at": pub,
-            })
-            if len(items) >= 5:
-                break
-        if items:
+        pub = pub_el.text.strip() if pub_el is not None and pub_el.text else _now_iso()
+        actual_source = source_el.text.strip() if source_el is not None and source_el.text else source_name
+
+        item_dict = {
+            "title":        title,
+            "source":       actual_source,
+            "url":          link,
+            "published_at": pub,
+        }
+
+        fallback_items.append(item_dict)
+
+        # If location_filter is provided, prioritize headlines containing the location name or local keywords
+        if loc_lower:
+            if loc_lower in title.lower() or loc_lower in actual_source.lower():
+                items.append(item_dict)
+        else:
+            items.append(item_dict)
+
+        if len(items) >= 5:
             break
 
-    return items
+    return items if items else fallback_items[:5]
 
 
 @mcp.tool(name="get_headlines", description="Fetch recent news headlines for a location or topic with source and URL")
 def get_headlines(location: str = "", query: str = "") -> list:
     search_term = _clean_search_term(location or query)
+    loc_lower = search_term.lower().strip() if search_term else ""
 
-    # ── Path 1: NewsAPI path ────────────────────────────────────────────────
+    # ── Path 1: Location-specific search via Google News RSS ───────────────
+    if search_term and search_term.lower() not in ("current location", "location"):
+        try:
+            query_str = f"{search_term} news" if not search_term.lower().endswith("news") else search_term
+            encoded_q = urllib.parse.quote(query_str)
+            google_rss_url = f"https://news.google.com/rss/search?q={encoded_q}&hl=en-US&gl=US&ceid=US:en"
+            items = _parse_rss(google_rss_url, f"Google News ({search_term.title()})", location_filter=search_term)
+            if items:
+                return items
+        except Exception:
+            pass
+
+    # ── Path 2: NewsAPI path for general headlines or topic queries ────────
     api_key = Config.NEWSAPI_API_KEY
     if api_key:
         try:
             endpoint = "https://newsapi.org/v2/everything" if search_term else "https://newsapi.org/v2/top-headlines"
-            params: dict[str, Any] = {"pageSize": 5, "apiKey": api_key}
+            params: dict[str, Any] = {"pageSize": 15, "apiKey": api_key, "language": "en"}
             if search_term:
                 params["q"] = search_term
                 params["sortBy"] = "publishedAt"
@@ -126,9 +148,12 @@ def get_headlines(location: str = "", query: str = "") -> list:
             r.raise_for_status()
             articles = r.json().get("articles", [])
             items: list[dict] = []
-            for a in articles[:5]:
+            for a in articles[:15]:
                 title = (a.get("title") or "").strip()
-                if not title or title == "[Removed]":
+                if not title or title == "[Removed]" or not _is_english(title):
+                    continue
+                # Require that title explicitly mentions the requested location
+                if loc_lower and loc_lower not in title.lower():
                     continue
                 source_name = (a.get("source") or {}).get("name") or "NewsAPI"
                 items.append({
@@ -137,17 +162,8 @@ def get_headlines(location: str = "", query: str = "") -> list:
                     "url":          a.get("url"),
                     "published_at": a.get("publishedAt") or _now_iso(),
                 })
-            if items:
-                return items
-        except Exception:
-            pass
-
-    # ── Path 2: Google News RSS for location-specific search ───────────────
-    if search_term and search_term.lower() not in ("current location", "location"):
-        try:
-            encoded_q = urllib.parse.quote(search_term)
-            google_rss_url = f"https://news.google.com/rss/search?q={encoded_q}&hl=en-US&gl=US&ceid=US:en"
-            items = _parse_rss(google_rss_url, f"Google News ({search_term.title()})")
+                if len(items) >= 5:
+                    break
             if items:
                 return items
         except Exception:
@@ -172,4 +188,5 @@ class NewsTool:
 
 if __name__ == "__main__":
     mcp.run()
+
 

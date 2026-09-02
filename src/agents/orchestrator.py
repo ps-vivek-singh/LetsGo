@@ -153,7 +153,7 @@ class OrchestratorAgent:
 
         if "news" in routed_agents:
             try:
-                results["news"] = self.news_agent.run_structured()
+                results["news"] = self.news_agent.run_structured(location)
             except Exception as exc:
                 results["news"] = {
                     "section": "news",
@@ -310,7 +310,7 @@ class OrchestratorAgent:
 
         dispatch = {
             "weather":   lambda: self.weather_agent.run_structured(location),
-            "news":      lambda: self.news_agent.run_structured(),
+            "news":      lambda: self.news_agent.run_structured(location),
             "commute":   lambda: self.commute_agent.run_structured(location, destination),
             "breakfast": meal_handler,
             "meal":      meal_handler,
