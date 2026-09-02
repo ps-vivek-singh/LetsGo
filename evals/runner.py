@@ -1,4 +1,4 @@
-"""Central CLI Runner and Scorecard for Commute Commander Evaluation Suite.
+"""Central CLI Runner and Scorecard for LetsGo Evaluation Suite.
 
 Usage:
     python -m evals.runner
@@ -66,7 +66,7 @@ def run_evals(category: str = "all", save_report: bool = True) -> int:
     """Run specified evaluations and display summary scorecard."""
     border = "=" * 72
     print("\n" + f"{_Colors.CYAN}{_Colors.BOLD}" + border + f"{_Colors.RESET}")
-    print(f" {_Colors.BOLD}[*] COMMUTE COMMANDER -- AGENT EVALUATION BENCHMARK SUITE{_Colors.RESET}")
+    print(f" {_Colors.BOLD}[*] LETSGO -- AGENT EVALUATION BENCHMARK SUITE{_Colors.RESET}")
     print(f"{_Colors.CYAN}{_Colors.BOLD}" + border + f"{_Colors.RESET}")
     print(f" * Mode: {_Colors.YELLOW}{category.upper()}{_Colors.RESET} | Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print(f"{_Colors.CYAN}{_Colors.BOLD}" + border + f"{_Colors.RESET}\n")
@@ -203,7 +203,7 @@ def run_evals(category: str = "all", save_report: bool = True) -> int:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Commute Commander Evaluation Runner")
+    parser = argparse.ArgumentParser(description="LetsGo Evaluation Runner")
     parser.add_argument(
         "--category",
         choices=["all", "intent", "trajectory", "reflection", "judge", "adversarial", "negative", "multitool"],

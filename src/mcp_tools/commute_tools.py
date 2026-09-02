@@ -72,7 +72,7 @@ def _geocode_nominatim(query: str) -> tuple[float, float, str] | None:
                 "limit": 1,
                 "addressdetails": 1,
             },
-            headers={"User-Agent": "CommuteCommander/1.0"},
+            headers={"User-Agent": "LetsGo/1.0"},
             timeout=10,
         )
         r.raise_for_status()

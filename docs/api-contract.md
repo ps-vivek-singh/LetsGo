@@ -1,4 +1,4 @@
-# Commute Commander — API Contract Specification
+# LetsGo — API Contract Specification
 
 > **Specification Version**: 2.2  
 > **Protocol Support**: HTTP/1.1 REST, Server-Sent Events (SSE), FastMCP In-Process Protocol  

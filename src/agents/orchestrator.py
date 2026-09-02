@@ -42,10 +42,13 @@ class OrchestratorAgent:
         self.agent_registry.register("commute", self.commute_agent)
         self.agent_registry.register("itinerary", self.itinerary_agent)
 
-        # ── MCP Server Registry ────────────────────────────────────────────
-        # Each domain has its own RealMCPServer exposing the canonical tool
-        # from that domain's MCP module. The orchestrator calls agents directly;
-        # these server objects enable external MCP tool discovery / inspection.
+        # ── MCP Client Manager & Server Registry ────────────────────────────
+        from remote_mcp.client_manager import MCPClientManager
+        from services.config import Config
+
+        self.mcp_mode = Config.get_mcp_mode()
+        self.client_manager = MCPClientManager(mcp_mode=self.mcp_mode)
+
         self.server_registry = ServerRegistry()
 
         self.weather_server = RealMCPServer("weather-server")
@@ -58,7 +61,6 @@ class OrchestratorAgent:
         self.weather_server.register_tool("get_weather", self.weather_agent.tool.get_weather)
         self.news_server.register_tool("get_headlines", self.news_agent.tool.get_headlines)
         self.recipe_server.register_tool("get_recipe", self.breakfast_agent.tool.get_recipe)
-        # Register the full routing tool (not the legacy advice shim)
         self.commute_server.register_tool("get_commute_route", self.commute_agent.tool.get_commute_route)
         from mcp_tools.itinerary_tools import get_itinerary
         self.itinerary_server.register_tool("get_itinerary", get_itinerary)
@@ -72,11 +74,17 @@ class OrchestratorAgent:
         self.server_registry.register("gmail", self.gmail_server)
 
         # ── Agentic Loop ──────────────────────────────────────────────────
+        registry_or_manager = self.client_manager if self.mcp_mode == "remote" else self.server_registry
         self.agentic_loop = AgenticLoop(
-            server_registry=self.server_registry,
+            server_registry=registry_or_manager,
             parser=self.parser,
             router=self.router,
         )
+
+    def close(self) -> None:
+        """Cleanly close remote MCP transport connections if active."""
+        if hasattr(self, "client_manager"):
+            self.client_manager.close_all()
 
     # ------------------------------------------------------------------
     # Original plain-text run — preserved so CLI and existing tests work

@@ -299,7 +299,7 @@ class AgenticLoop:
 
     def __init__(
         self,
-        server_registry: ServerRegistry,
+        server_registry: Union[ServerRegistry, Any],
         parser: QueryParser | None = None,
         router: Router | None = None,
     ) -> None:
@@ -308,11 +308,16 @@ class AgenticLoop:
         self.router = router or Router()
         self.reflection_engine = ReflectionEngine()
 
-        # Build MCP agents for each server
+        # Build MCP agents for each server (using RealMCPServer or RemoteMCPClient)
         self._agents: Dict[str, MCPAgent] = {}
-        for name in server_registry.list_servers():
-            server = server_registry.get_server(name)
-            self._agents[name] = MCPAgent(name, server)
+        if hasattr(server_registry, "list_servers"):
+            for name in server_registry.list_servers():
+                client_or_server = (
+                    server_registry.get_client(name)
+                    if hasattr(server_registry, "get_client")
+                    else server_registry.get_server(name)
+                )
+                self._agents[name] = MCPAgent(name, client_or_server)
 
     # ── Discovery ──────────────────────────────────────────────────────────
 

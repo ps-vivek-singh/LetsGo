@@ -140,7 +140,7 @@ class LLMClient:
             "Content-Type": "application/json",
             "Accept": "application/json",
             "Authorization": f"Bearer {sanitized_api_key}",
-            "User-Agent": "Antigravity-CommuteCommander/1.0",
+            "User-Agent": "Antigravity-LetsGo/1.0",
         }
 
         try:

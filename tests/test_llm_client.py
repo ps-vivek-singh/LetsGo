@@ -15,9 +15,10 @@ def test_llm_client_availability():
 
 def test_llm_client_provider_urls():
     # NVIDIA
-    c_nv = LLMClient(api_key="nvapi-12345")
-    assert c_nv.base_url == "https://integrate.api.nvidia.com/v1/chat/completions"
-    assert c_nv.model == "meta/llama-3.1-8b-instruct"
+    with patch("services.config.Config.get_llm_model", return_value=""):
+        c_nv = LLMClient(api_key="nvapi-12345")
+        assert c_nv.base_url == "https://integrate.api.nvidia.com/v1/chat/completions"
+        assert c_nv.model == "meta/llama-3.2-11b-vision-instruct"
 
     # Groq
     c_groq = LLMClient(api_key="gsk_12345")

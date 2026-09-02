@@ -32,7 +32,7 @@ def _now_iso() -> str:
 
 def _parse_rss(url: str, source_name: str) -> list[dict]:
     """Fetch an RSS feed and return structured article dicts with URLs."""
-    r = requests.get(url, timeout=10, headers={"User-Agent": "CommuteCommander/1.0"})
+    r = requests.get(url, timeout=10, headers={"User-Agent": "LetsGo/1.0"})
     r.raise_for_status()
 
     # Strip any BOM or leading whitespace that can break the XML parser

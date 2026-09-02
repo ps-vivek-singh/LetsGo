@@ -1,4 +1,4 @@
-"""Commute Commander web server.
+"""LetsGo web server.
 
 Run with:  python scripts/webapp.py
 Visit:     http://localhost:8000
@@ -522,8 +522,8 @@ class CommuteCommanderHandler(SimpleHTTPRequestHandler):
                 session_id = str(body.get("session_id", "")).strip()
                 intent = _get_intent(session_id)
                 loc = intent.get("location", "your destination")
-                body_html = f"<h2>Briefing & Itinerary for {loc}</h2><p>Here is your travel summary from LetGO.</p>"
-                body_text = f"Briefing & Itinerary for {loc}\nHere is your travel summary from LetGO."
+                body_html = f"<h2>Briefing & Itinerary for {loc}</h2><p>Here is your travel summary from LetsGo.</p>"
+                body_text = f"Briefing & Itinerary for {loc}\nHere is your travel summary from LetsGo."
 
             from mcp_tools.email_tools import send_email_briefing
             res = send_email_briefing(
@@ -610,7 +610,7 @@ if __name__ == "__main__":
     model = Config.get_llm_model() or "llama-3.1-8b-instruct"
     
     print("\n" + "\033[1m\033[36m" + "═" * 65 + "\033[0m")
-    print(" \033[1m\033[32m🚀 LetGO — Multi-Agent Assistant Server\033[0m")
+    print(" \033[1m\033[32m🚀 LetsGo — Multi-Agent Assistant Server\033[0m")
     print("\033[1m\033[36m" + "═" * 65 + "\033[0m")
     print(" • \033[1mWeb UI URL\033[0m         : \033[34mhttp://localhost:8000\033[0m")
     print(" • \033[1mObservability API\033[0m  : \033[34mhttp://localhost:8000/api/observability/metrics\033[0m")

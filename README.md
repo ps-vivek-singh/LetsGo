@@ -13,7 +13,11 @@
 
 ## 1. Executive Summary
 
+<<<<<<< HEAD
 **LetsGo** is a modular, autonomous multi-agent application that orchestrates specialist AI agents to provide comprehensive, context-aware daily briefings and personalized travel itiner[...]
+=======
+**LetsGo** is a modular, autonomous multi-agent application that orchestrates specialist AI agents to provide comprehensive, context-aware daily briefings and personalized travel itineraries. Combining a zero-dependency **NLP Query Parser**, an explicit **ReAct (Reason + Act) Control Loop**, standard **Model Context Protocol (FastMCP)** tool servers, a multi-factor **Cross-Domain Reflection Engine**, and a conversational **Response Synthesizer**, the application generates actionable, highly tailored daily intelligence.
+>>>>>>> 48e8ce8 (feat: Upgrade LetsGo with standards-compliant remote MCP architecture, LetsGo rebrand, and SMTP port 465 SSL fallback)
 
 The application functions across three distinct operating environments:
 1. **Interactive Command-Line Interface (CLI)**: High-speed terminal interaction for automated scripts and headless environments.
@@ -25,9 +29,15 @@ The application functions across three distinct operating environments:
 ## 2. Core Architectural Pillars
 
 ```
+<<<<<<< HEAD
 ┌────────────────────────────────────────────────────────────────�[...]
 │                                 LetsGo                                │
 ├─────────────────────────┬───────────────────────────────┬──────�[...]
+=======
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│                                    LETSGO                                       │
+├─────────────────────────┬───────────────────────────────┬────────────────────────┤
+>>>>>>> 48e8ce8 (feat: Upgrade LetsGo with standards-compliant remote MCP architecture, LetsGo rebrand, and SMTP port 465 SSL fallback)
 │   1. NLP INTENT ENGINE  │     2. MULTI-AGENT SYSTEM     │   3. FASTMCP TOOL MESH │
 │  • Regex + Pattern Match│  • ReAct Agentic Loop (7-Step)│  • FastMCP Tool Servers│
 │  • Zero-ML Instant Start│  • Multi-Factor Reflection    │  • LLM Engine (NVIDIA) │

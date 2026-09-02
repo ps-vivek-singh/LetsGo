@@ -1,4 +1,4 @@
-# Commute Commander — Technical Project Documentation
+# LetsGo — Technical Project Documentation
 
 > **Comprehensive Engineering & Architecture Specification**  
 > **System Architecture**: ReAct Multi-Agent Coordination with Model Context Protocol (FastMCP) Tool Mesh  
@@ -10,7 +10,7 @@
 
 Modern individuals begin their day needing to synthesize disparate, critical information: local meteorological conditions, traffic delays across multiple transit modalities, breaking news updates, meal planning based on available pantry ingredients, and multi-day travel schedules.
 
-**Commute Commander** solves this cognitive overhead by acting as an autonomous multi-agent daily commander. The system ingests natural-language queries, autonomously perceives intent, dynamically discovers available Model Context Protocol (FastMCP) tools, orchestrates specialist agents through a ReAct loop, performs multi-factor consistency reflection, and outputs both progressive card updates via Server-Sent Events (SSE) and conversational natural-language executive summaries.
+**LetsGo** solves this cognitive overhead by acting as an autonomous multi-agent daily commander. The system ingests natural-language queries, autonomously perceives intent, dynamically discovers available Model Context Protocol (FastMCP) tools, orchestrates specialist agents through a ReAct loop, performs multi-factor consistency reflection, and outputs both progressive card updates via Server-Sent Events (SSE) and conversational natural-language executive summaries.
 
 ---
 
@@ -338,7 +338,7 @@ The project includes an enterprise-grade evaluation suite (`evals/`) covering 7 
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
-│                   COMMUTE COMMANDER EVALUATION SUITE                   │
+│                      LETSGO EVALUATION SUITE                           │
 ├────────────────────────────────────────────────────────────────────────┤
 │ Layer 7: Complex Multi-Tool Orchestration (eval_multitool.py)          │
 │ Layer 6: Negative Constraints & Excluded Tools (eval_negative.py)      │
@@ -386,7 +386,7 @@ All modules are continuously verified via `pytest`. The test suite contains **69
 
 ## 9. Future Scope & Strategic Roadmap
 
-The architecture of Commute Commander is designed with modular extensibility. The following strategic phases represent the upcoming roadmap:
+The architecture of LetsGo is designed with modular extensibility. The following strategic phases represent the upcoming roadmap:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐

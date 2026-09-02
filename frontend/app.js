@@ -1,6 +1,6 @@
 'use strict';
 /* ============================================================
-   Commute Commander — app.js
+   LetsGo — app.js
    Production-grade agentic morning briefing UI
    ============================================================ */
 
@@ -694,7 +694,7 @@ form.addEventListener('submit', async e => {
     state.intent = data.intent;
 
     $('topbar-heading').textContent = 'Here\'s your briefing';
-    $('topbar-eyebrow').textContent = data.intent?.location || 'Commute Commander';
+    $('topbar-eyebrow').textContent = data.intent?.location || 'LetsGo';
     renderIntentChips(data.intent);
 
     const sections = data.sections || {};
@@ -937,10 +937,10 @@ function switchView(name) {
   });
 
   const headings = {
-    ask: ['Commute Commander', 'Good morning — what\'s your plan?'],
-    itinerary: ['Commute Commander', 'Travel Itinerary Planner'],
-    history: ['Commute Commander', 'Briefing History'],
-    settings: ['Commute Commander', 'Settings'],
+    ask: ['LetsGo', 'Good morning — what\'s your plan?'],
+    itinerary: ['LetsGo', 'Travel Itinerary Planner'],
+    history: ['LetsGo', 'Briefing History'],
+    settings: ['LetsGo', 'Settings'],
   };
   const [eyebrow, heading] = headings[name] || headings.ask;
   $('topbar-eyebrow').textContent = eyebrow;
@@ -948,8 +948,16 @@ function switchView(name) {
 
   if (name === 'history') loadHistory();
   if (name === 'settings') loadSettings();
-  if (name === 'ask' && state.sections['itinerary']) {
-    renderItinerary(state.sections['itinerary']);
+  if (name === 'ask') {
+    if (state.sections['itinerary']) {
+      renderItinerary(state.sections['itinerary']);
+    }
+    if (typeof _leafletMap !== 'undefined' && _leafletMap) {
+      setTimeout(() => { _leafletMap.invalidateSize(); }, 100);
+    }
+  }
+  if (name === 'itinerary' && state.sections['itinerary']) {
+    renderItineraryInView(state.sections['itinerary'], state.intent);
   }
 }
 

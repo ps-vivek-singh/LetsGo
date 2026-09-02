@@ -55,6 +55,25 @@ class Config:
         cls.reload()
         return (os.getenv("RECIPIENT_EMAIL") or os.getenv("DEFAULT_RECIPIENT_EMAIL", "")).strip().strip('"\'')
 
+    @classmethod
+    def get_smtp_host(cls) -> str:
+        cls.reload()
+        return (os.getenv("SMTP_HOST") or "smtp.gmail.com").strip().strip('"\'')
+
+    @classmethod
+    def get_smtp_port(cls) -> int:
+        cls.reload()
+        val = os.getenv("SMTP_PORT", "465").strip().strip('"\'')
+        try:
+            return int(val)
+        except ValueError:
+            return 465
+
+    @classmethod
+    def get_mcp_mode(cls) -> str:
+        cls.reload()
+        return (os.getenv("MCP_MODE") or "in_process").strip().lower()
+
     # Backwards compatibility helpers
     get_xai_key = get_llm_key
     get_xai_model = get_llm_model

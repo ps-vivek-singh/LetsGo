@@ -1,4 +1,4 @@
-# Commute Commander — UI & Visual Design Specification
+# LetsGo — UI & Visual Design Specification
 
 > **Specification Version**: 2.2  
 > **Visual Direction**: Modern Glassmorphism · Deep Navy Canvas · Lavender & Purple Accents · Vibrant Domain Indicators  
@@ -8,7 +8,7 @@
 
 ## 1. Application Layout & View Hierarchy
 
-The Commute Commander dashboard is structured into a persistent vertical sidebar, a top branding bar, and four primary view containers:
+The LetsGo dashboard is structured into a persistent vertical sidebar, a top branding bar, and four primary view containers:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐

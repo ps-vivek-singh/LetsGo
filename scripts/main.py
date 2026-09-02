@@ -1,4 +1,4 @@
-"""CLI entry point for Commute Commander.
+"""CLI entry point for LetsGo.
 
 Run with:  python scripts/main.py
 """
@@ -16,7 +16,7 @@ from services.session_manager import SessionManager
 
 
 def main() -> None:
-    print("Commute Commander")
+    print("LetsGo")
     print("Type 'quit' to exit.\n")
     session_manager = SessionManager()
     orchestrator = OrchestratorAgent(session_manager=session_manager)

@@ -1,4 +1,4 @@
-# Commute Commander — Architecture Q&A: System Design, Agentic AI & MCP Standards
+# LetsGo — Architecture Q&A: System Design, Agentic AI & MCP Standards
 
 > **Document Summary**: In-depth architectural questions and answers exploring multi-agent autonomy, Model Context Protocol (FastMCP) integration, hybrid LLM execution, ReAct loops, reflection engineering, and real-time streaming.
 
@@ -6,20 +6,20 @@
 
 ## 1. Multi-Agent Systems & Agentic AI
 
-### Q1: What makes Commute Commander a genuine Multi-Agent System rather than a standard monolithic backend?
+### Q1: What makes LetsGo a genuine Multi-Agent System rather than a standard monolithic backend?
 **Answer**:
 In modern computer science and artificial intelligence, an **Agent** is defined by three fundamental characteristics:
 1. **Domain Autonomy**: It operates independently with specialized responsibility over its data domain.
 2. **Standardized Protocol Tool Interfaces**: It interacts with external data sources using structured discovery and invocation protocols (FastMCP).
 3. **Reasoning Control Loop**: It evaluates user intent, discovers tools, generates structured observations, audits decisions through reflection, and synthesizes output.
 
-Commute Commander distributes its responsibilities across **five domain specialist agents** (`WeatherAgent`, `CommuteAgent`, `MealAgent`, `NewsAgent`, `ItineraryAgent`) and two coordinating agents (`MCPAgent`, `OrchestratorAgent`). Each specialist agent executes independently, encapsulates domain-specific transformation logic, handles internal fallbacks, and produces type-safe JSON envelopes.
+LetsGo distributes its responsibilities across **five domain specialist agents** (`WeatherAgent`, `CommuteAgent`, `MealAgent`, `NewsAgent`, `ItineraryAgent`) and two coordinating agents (`MCPAgent`, `OrchestratorAgent`). Each specialist agent executes independently, encapsulates domain-specific transformation logic, handles internal fallbacks, and produces type-safe JSON envelopes.
 
 ---
 
 ### Q2: How does the Hybrid Architecture balance deterministic performance with LLM creativity?
 **Answer**:
-Commute Commander employs a **Hybrid Agentic Architecture**:
+LetsGo employs a **Hybrid Agentic Architecture**:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
