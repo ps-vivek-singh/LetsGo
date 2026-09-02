@@ -10,6 +10,7 @@ Open-Meteo geocoding endpoint so no extra API key is needed.
 """
 from __future__ import annotations
 
+import re
 import requests
 
 from fastmcp import FastMCP
@@ -19,20 +20,60 @@ mcp = FastMCP("weather-server")
 
 # ── helpers ────────────────────────────────────────────────────────────────
 
+def _clean_location(location: str) -> str:
+    """Strip noise words from weather query location strings."""
+    if not location:
+        return ""
+    loc = location.strip()
+    noise_patterns = [
+        r"\b(?:weather|forecast|temperature|temp|uv|report)\s+(?:in|for|at|of|near)\b",
+        r"\b(?:in|for|at|of|near)\s+(?:the\s+)?(?:city\s+of\s+)?",
+        r"\b(?:weather|forecast|temperature|temp|uv|report)\b",
+        r"\b(?:current\s+location|my\s+location|here)\b",
+    ]
+    cleaned = loc
+    for pat in noise_patterns:
+        cleaned = re.sub(pat, "", cleaned, flags=re.IGNORECASE).strip(" .,!?")
+    return cleaned if cleaned else loc
+
+
 def _geocode(location: str) -> tuple[float, float] | None:
-    """Resolve a city name to (lat, lon) using the Open-Meteo geocoding API."""
+    """Resolve a city name to (lat, lon) using Open-Meteo and OSM Nominatim fallback."""
+    if not location:
+        return None
+    cleaned = _clean_location(location)
+
+    # Try cleaned location name first, then original string
+    candidates = [c for c in [cleaned, location] if c]
+    for loc_candidate in candidates:
+        try:
+            r = requests.get(
+                "https://geocoding-api.open-meteo.com/v1/search",
+                params={"name": loc_candidate, "count": 1, "language": "en", "format": "json"},
+                timeout=8,
+            )
+            r.raise_for_status()
+            results = r.json().get("results", [])
+            if results:
+                return float(results[0]["latitude"]), float(results[0]["longitude"])
+        except Exception:
+            pass
+
+    # OpenStreetMap Nominatim fallback
     try:
         r = requests.get(
-            "https://geocoding-api.open-meteo.com/v1/search",
-            params={"name": location, "count": 1, "language": "en", "format": "json"},
+            "https://nominatim.openstreetmap.org/search",
+            params={"q": cleaned or location, "format": "json", "limit": 1},
+            headers={"User-Agent": "LetsGo-App/1.0"},
             timeout=8,
         )
         r.raise_for_status()
-        results = r.json().get("results", [])
-        if results:
-            return results[0]["latitude"], results[0]["longitude"]
+        data = r.json()
+        if data:
+            return float(data[0]["lat"]), float(data[0]["lon"])
     except Exception:
         pass
+
     return None
 
 
@@ -79,6 +120,7 @@ def _build_hourly(meteo_data: dict) -> list[dict]:
 
 @mcp.tool(name="get_weather", description="Fetch weather and UV information for a location")
 def get_weather(location: str) -> dict:
+    cleaned_loc = _clean_location(location)
     # ── path 1: OpenWeatherMap for current conditions ──────────────────────
     api_key = Config.OPENWEATHER_API_KEY
     owm_temp = None
@@ -87,7 +129,7 @@ def get_weather(location: str) -> dict:
         try:
             r = requests.get(
                 "https://api.openweathermap.org/data/2.5/weather",
-                params={"q": location, "appid": api_key, "units": "metric"},
+                params={"q": cleaned_loc or location, "appid": api_key, "units": "metric"},
                 timeout=10,
             )
             r.raise_for_status()
@@ -103,7 +145,7 @@ def get_weather(location: str) -> dict:
     meteo_uv   = None
     meteo_source = "open-meteo"
 
-    # Try geocoding the location string first; fall back to Chicago coords
+    # Try geocoding the location string first; fall back to Chicago coords if empty/unknown
     coords = _geocode(location) if location else None
     lat, lon = coords if coords else (41.8781, -87.6298)
 
@@ -138,3 +180,4 @@ class WeatherTool:
 
 if __name__ == "__main__":
     mcp.run()
+

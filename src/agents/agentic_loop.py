@@ -60,8 +60,8 @@ def _weather_args(intent: dict) -> dict:
     return {"location": intent.get("location", "")}
 
 
-def _news_args(_intent: dict) -> dict:
-    return {}
+def _news_args(intent: dict) -> dict:
+    return {"location": intent.get("location", "")}
 
 
 def _commute_args(intent: dict) -> dict:

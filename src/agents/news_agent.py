@@ -1,8 +1,8 @@
 """NewsAgent — wraps NewsTool and shapes output for UI cards.
 
 The tool now returns list[dict] with title/source/url/published_at.
-run()            → plain text  (CLI / legacy)
-run_structured() → typed dict  (web API §3.2)
+run(location)            → plain text  (CLI / legacy)
+run_structured(location) → typed dict  (web API §3.2)
 """
 from __future__ import annotations
 
@@ -14,19 +14,20 @@ class NewsAgent:
         self.tool = NewsTool()
 
     # ── CLI / legacy ───────────────────────────────────────────────────────
-    def run(self) -> str:
-        raw = self.tool.get_headlines()
+    def run(self, location: str = "") -> str:
+        raw = self.tool.get_headlines(location=location)
         lines = []
         for item in raw[:3]:
             if isinstance(item, dict):
                 lines.append(f"- {item.get('title', '')}")
             else:
                 lines.append(f"- {item}")
-        return "## News\n" + "\n".join(lines)
+        header = f"## News ({location})\n" if location else "## News\n"
+        return header + "\n".join(lines)
 
     # ── Structured (web API §3.2) ──────────────────────────────────────────
-    def run_structured(self) -> dict:
-        raw: list = self.tool.get_headlines()
+    def run_structured(self, location: str = "") -> dict:
+        raw: list = self.tool.get_headlines(location=location)
         headlines: list[dict] = []
 
         for item in raw[:5]:
@@ -56,3 +57,4 @@ class NewsAgent:
             "status":  "success" if headlines else "error",
             "data":    {"headlines": headlines},
         }
+
