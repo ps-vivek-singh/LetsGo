@@ -193,8 +193,122 @@ class LLMClient:
             return choices[0]["message"].get("content", "")
         return ""
 
+    def route_intent(self, query: str, tools_manifest: Dict[str, List[str]]) -> Dict[str, Any]:
+        """Use LLM to analyze query and decide which sections/tools to route to."""
+        if not self.is_available():
+            raise ValueError("LLM API key is not configured.")
+
+        system_prompt = (
+            "You are an intelligent intent router. Analyze the user's query and the available MCP tools manifest.\n"
+            "Respond ONLY with a valid JSON object with the following schema:\n"
+            "{\n"
+            '  "sections": ["weather", "news", "commute", "breakfast", "itinerary", "email"],\n'
+            '  "thought": "Brief explanation of routing rationale",\n'
+            '  "location": "Origin city/location if specified",\n'
+            '  "destination": "Destination city/place if commuting or traveling"\n'
+            "}\n"
+            f"Available tool servers and tools: {json.dumps(tools_manifest)}"
+        )
+
+        resp_text = self.complete(f"{system_prompt}\n\nUser Query: {query}", temperature=0.0)
+        # Extract JSON from potential code block markers
+        clean_text = resp_text.strip()
+        if clean_text.startswith("```"):
+            clean_text = clean_text.split("```")[1]
+            if clean_text.startswith("json"):
+                clean_text = clean_text[4:]
+            clean_text = clean_text.strip()
+
+        try:
+            return json.loads(clean_text)
+        except Exception:
+            logger.warning("Failed to parse LLM route_intent response: %s", resp_text)
+            return {"sections": [], "thought": "Failed to parse JSON response"}
+
+    def select_next_action(
+        self,
+        query: str,
+        tools_manifest: Dict[str, List[str]],
+        trace_history: List[Dict[str, Any]],
+        tools_metadata: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        """Ask LLM to view discovered tools, evaluate history, and pick the next tool or stop.
+
+        Returns a dict::
+
+            {
+                "thought": "Reasoning for next action",
+                "action": "server.tool_name" or "finish",
+                "action_args": { ... }
+            }
+        """
+        if not self.is_available():
+            raise ValueError("LLM API key is not configured.")
+
+        system_prompt = (
+            "You are an agentic router and tool execution controller.\n"
+            "Your job is to inspect the user query, available discovered MCP tools, and current execution history,\n"
+            "then decide the NEXT tool to call or decide to FINISH if all requested information has been gathered.\n\n"
+            "Discovered Tool Servers & Tools:\n"
+            f"{json.dumps(tools_manifest, indent=2)}\n\n"
+        )
+        if tools_metadata:
+            system_prompt += f"Tool Details/Parameters:\n{json.dumps(tools_metadata, indent=2)}\n\n"
+
+        system_prompt += (
+            "You MUST respond ONLY with a valid JSON object matching this exact format:\n"
+            "{\n"
+            '  "thought": "Your step-by-step reasoning about what info is missing or why you are done",\n'
+            '  "action": "server_name.tool_name" or "finish",\n'
+            '  "action_args": { "param1": "val1" }\n'
+            "}\n\n"
+            "Rules:\n"
+            "1. 'action' must be either a valid 'server_name.tool_name' combination from Discovered Tool Servers (e.g. 'weather.get_weather', 'commute.get_commute_route', 'news.get_headlines', 'recipe.get_recipe', 'itinerary.get_itinerary', 'gmail.send_email_briefing') or 'finish'.\n"
+            "2. If all user requests in the query have been fulfilled by previous observations, set 'action' to 'finish'.\n"
+            "3. Provide exact arguments in 'action_args' needed by the tool.\n"
+        )
+
+        history_str = ""
+        if trace_history:
+            history_str = "Execution History So Far:\n"
+            for step in trace_history:
+                history_str += f"- Step {step.get('step')}: Thought: {step.get('thought')}\n"
+                history_str += f"  Action: {step.get('action')}({json.dumps(step.get('action_args', {}))})\n"
+                history_str += f"  Observation: {step.get('observation')}\n"
+        else:
+            history_str = "Execution History So Far: (None - this is Step 1)\n"
+
+        prompt = f"{system_prompt}\nUser Query: {query}\n\n{history_str}\nDecide Next Action (JSON ONLY):"
+
+        resp_text = self.complete(prompt, temperature=0.0)
+        clean_text = resp_text.strip()
+        if clean_text.startswith("```"):
+            clean_text = clean_text.split("```")[1]
+            if clean_text.startswith("json"):
+                clean_text = clean_text[4:]
+            clean_text = clean_text.strip()
+
+        try:
+            parsed = json.loads(clean_text)
+            action = parsed.get("action", "finish")
+            thought = parsed.get("thought", "")
+            action_args = parsed.get("action_args", {})
+            return {
+                "thought": thought,
+                "action": action,
+                "action_args": action_args if isinstance(action_args, dict) else {},
+            }
+        except Exception:
+            logger.warning("Failed to parse LLM select_next_action response: %s", resp_text)
+            return {
+                "thought": "Failed to parse response, finishing execution.",
+                "action": "finish",
+                "action_args": {},
+            }
+
 
 # Backwards compatibility alias
 XAIClient = LLMClient
+
 
 

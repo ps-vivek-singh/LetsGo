@@ -289,6 +289,68 @@ _SECTION_SHAPERS = {
 }
 
 
+from services.llm_client import LLMClient
+
+
+def _parse_action_target(action_str: str) -> tuple[str, str, str]:
+    """Parse 'server.tool' or 'tool' or 'server' into (server_name, tool_name, section_name)."""
+    clean_action = action_str.strip()
+    if "." in clean_action:
+        server_name, tool_name = clean_action.split(".", 1)
+    else:
+        server_name = clean_action
+        tool_name = clean_action
+        for sec, meta in _SECTION_TOOL_MAP.items():
+            if meta["server"] == clean_action or meta["tool"] == clean_action or sec == clean_action:
+                server_name = meta["server"]
+                tool_name = meta["tool"]
+                break
+
+    section_name = "unknown"
+    for sec, meta in _SECTION_TOOL_MAP.items():
+        if meta["server"] == server_name or meta["tool"] == tool_name:
+            section_name = sec
+            break
+    if section_name == "unknown":
+        section_name = server_name
+
+    return server_name, tool_name, section_name
+
+
+def _build_observation_summary(section: str, shaped: dict) -> str:
+    """Build concise observation text for trace steps."""
+    data = shaped.get("data", {}) if isinstance(shaped, dict) else {}
+    if section == "weather":
+        return (
+            f"Got weather: {data.get('temp')}°C, "
+            f"UV {data.get('uv_index')}, "
+            f"condition: {data.get('condition')}."
+        )
+    elif section == "news":
+        count = len(data.get("headlines", []))
+        return f"Got {count} headlines."
+    elif section == "commute":
+        return (
+            f"Got commute: {data.get('eta_minutes')} min "
+            f"by {data.get('recommended_mode')}, "
+            f"{data.get('distance_km')} km."
+        )
+    elif section == "breakfast":
+        m_type = data.get('meal_type', 'meal')
+        return (
+            f"Got {m_type} recipe: {data.get('recipe_name')} "
+            f"({data.get('prep_time_minutes')} min prep)."
+        )
+    elif section == "itinerary":
+        loc = data.get('location', '')
+        days_c = data.get('days_count', 2)
+        return f"Generated {days_c}-day itinerary for {loc}."
+    elif section == "email":
+        status = data.get('status', 'ok')
+        return f"Email tool status: {status}."
+    return f"Got result for {section}."
+
+
 # ── Agentic Loop ───────────────────────────────────────────────────────────
 
 MAX_ITERATIONS = 8  # safety net
@@ -302,10 +364,12 @@ class AgenticLoop:
         server_registry: Union[ServerRegistry, Any],
         parser: QueryParser | None = None,
         router: Router | None = None,
+        llm_client: LLMClient | None = None,
     ) -> None:
         self.server_registry = server_registry
         self.parser = parser or QueryParser()
         self.router = router or Router()
+        self.llm_client = llm_client or LLMClient()
         self.reflection_engine = ReflectionEngine()
 
         # Build MCP agents for each server (using RealMCPServer or RemoteMCPClient)
@@ -336,12 +400,12 @@ class AgenticLoop:
 
         Steps:
         1. PERCEIVE  — parse query, discover tools
-        2. PLAN      — decide which sections to fulfil
-        3. ACT       — call one tool per iteration
-        4. OBSERVE   — inspect the result
-        5. DECIDE    — loop or finish
-        6. REFLECT   — cross-check all gathered data
-        7. RESPOND   — synthesize a friendly summary
+        2. PLAN      — decide which sections/tools to call
+        3. ACT       — invoke tool
+        4. OBSERVE   — inspect result
+        5. DECIDE    — LLM or rule-based stop check
+        6. REFLECT   — cross-check data
+        7. RESPOND   — synthesize summary
         """
 
         # ── Step 1: PERCEIVE ───────────────────────────────────────────────
@@ -365,139 +429,205 @@ class AgenticLoop:
 
         # Discover available tools from MCP servers
         tools_discovered = self.discover_tools()
-
-        # ── Step 2: PLAN ───────────────────────────────────────────────────
-        routed_sections = self.router.route(intent["sections"])
-        if telemetry:
-            telemetry.agent(f"PLAN: routed sections -> {routed_sections}", trace_id=session_id, agent_name="router")
-        pending = list(routed_sections)
         fulfilled: Dict[str, Any] = {}
         trace: List[TraceStep] = []
         step_num = 0
 
-        # ── Steps 3-5: ACT → OBSERVE → DECIDE loop ────────────────────────
-        while pending and step_num < MAX_ITERATIONS:
-            section = pending.pop(0)
-            step_num += 1
+        # Check if LLM-driven loop can be used
+        use_llm_loop = bool(self.llm_client and self.llm_client.is_available())
 
-            mapping = _SECTION_TOOL_MAP.get(section)
-            if not mapping:
+        if use_llm_loop:
+            # ── LLM-Driven ACT → OBSERVE → DECIDE Loop ──────────────────────
+            if telemetry:
+                telemetry.agent("PLAN: using LLM-driven routing and tool selection", trace_id=session_id, agent_name="agentic_loop")
+
+            try:
+                while step_num < MAX_ITERATIONS:
+                    trace_history_dicts = [
+                        {
+                            "step": t.step,
+                            "thought": t.thought,
+                            "action": t.action,
+                            "action_args": t.action_args,
+                            "observation": t.observation,
+                        }
+                        for t in trace
+                    ]
+
+                    decision = self.llm_client.select_next_action(
+                        query=query,
+                        tools_manifest=tools_discovered,
+                        trace_history=trace_history_dicts,
+                    )
+
+                    thought = decision.get("thought", "")
+                    action = decision.get("action", "finish")
+                    llm_args = decision.get("action_args", {})
+
+                    if action.lower() in ("finish", "complete", "done", "stop") or action == "finish_complete":
+                        step_num += 1
+                        trace.append(TraceStep(
+                            step=step_num,
+                            thought=thought or "All user requests fulfilled.",
+                            action="finish_complete",
+                            action_args={},
+                            observation=f"Successfully gathered {len(fulfilled)} sections: {list(fulfilled.keys())}.",
+                        ))
+                        break
+
+                    server_name, tool_name, section = _parse_action_target(action)
+                    step_num += 1
+
+                    default_arg_fn = _SECTION_TOOL_MAP.get(section, {}).get("args")
+                    base_args = default_arg_fn(intent) if default_arg_fn else {}
+                    tool_args = {**base_args, **llm_args}
+
+                    action_label = f"{server_name}.{tool_name}"
+                    t0 = time.perf_counter()
+                    try:
+                        agent = self._agents.get(server_name)
+                        if not agent:
+                            obs = f"Server '{server_name}' not found."
+                            elapsed_ms = 0
+                        else:
+                            raw_result = agent.invoke(tool_name, **tool_args)
+
+                            shaper = _SECTION_SHAPERS.get(section)
+                            if shaper:
+                                shaped = shaper(raw_result)
+                            else:
+                                shaped = {"section": section, "status": "success", "data": raw_result}
+
+                            elapsed_ms = int((time.perf_counter() - t0) * 1000)
+                            obs = _build_observation_summary(section, shaped)
+                            if telemetry:
+                                telemetry.tool(server_name, tool_name, elapsed_ms, status="OK", trace_id=session_id)
+                            fulfilled[section] = shaped
+
+                    except Exception as exc:
+                        elapsed_ms = int((time.perf_counter() - t0) * 1000)
+                        obs = f"Error calling {action_label}: {exc}"
+                        if telemetry:
+                            telemetry.tool(server_name, tool_name, elapsed_ms, status="ERROR", trace_id=session_id, error=str(exc))
+                        fulfilled[section] = {
+                            "section": section,
+                            "status": "error",
+                            "error": {"code": "tool_error", "message": str(exc)},
+                        }
+
+                    trace.append(TraceStep(
+                        step=step_num,
+                        thought=thought,
+                        action=action_label,
+                        action_args=tool_args,
+                        observation=obs,
+                        duration_ms=elapsed_ms,
+                    ))
+            except Exception as exc:
+                if telemetry:
+                    telemetry.error("AgenticLoop", f"LLM select_next_action failed: {exc}. Falling back to deterministic loop.")
+                use_llm_loop = False
+                fulfilled = {}
+                trace = []
+                step_num = 0
+
+        if not use_llm_loop:
+
+            # ── Deterministic Rule-Based Fallback Loop ───────────────────────
+
+            routed_sections = self.router.route(intent["sections"])
+            if telemetry:
+                telemetry.agent(f"PLAN: deterministic fallback routed sections -> {routed_sections}", trace_id=session_id, agent_name="router")
+            pending = list(routed_sections)
+
+            while pending and step_num < MAX_ITERATIONS:
+                section = pending.pop(0)
+                step_num += 1
+
+                mapping = _SECTION_TOOL_MAP.get(section)
+                if not mapping:
+                    trace.append(TraceStep(
+                        step=step_num,
+                        thought=f"Section '{section}' has no tool mapping — skipping.",
+                        action="skip",
+                        action_args={},
+                        observation=f"No tool available for '{section}'.",
+                    ))
+                    continue
+
+                server_name = mapping["server"]
+                tool_name = mapping["tool"]
+                arg_builder = mapping["args"]
+                tool_args = arg_builder(intent)
+
+                available_tools = tools_discovered.get(server_name, [])
+                thought = (
+                    f"I need {section} data. Server '{server_name}' exposes "
+                    f"{available_tools}. I'll call '{tool_name}' with "
+                    f"{tool_args}."
+                )
+
+                action = f"{server_name}.{tool_name}"
+                t0 = time.perf_counter()
+                try:
+                    agent = self._agents[server_name]
+                    raw_result = agent.invoke(tool_name, **tool_args)
+
+                    shaper = _SECTION_SHAPERS.get(section)
+                    if shaper:
+                        shaped = shaper(raw_result)
+                    else:
+                        shaped = {"section": section, "status": "success", "data": raw_result}
+
+                    elapsed_ms = int((time.perf_counter() - t0) * 1000)
+                    obs = _build_observation_summary(section, shaped)
+
+                    if telemetry:
+                        telemetry.tool(server_name, tool_name, elapsed_ms, status="OK", trace_id=session_id)
+
+                    fulfilled[section] = shaped
+
+                except Exception as exc:
+                    elapsed_ms = int((time.perf_counter() - t0) * 1000)
+                    obs = f"Error calling {action}: {exc}"
+                    if telemetry:
+                        telemetry.tool(server_name, tool_name, elapsed_ms, status="ERROR", trace_id=session_id, error=str(exc))
+                    fulfilled[section] = {
+                        "section": section,
+                        "status": "error",
+                        "error": {"code": "tool_error", "message": str(exc)},
+                    }
+
                 trace.append(TraceStep(
                     step=step_num,
-                    thought=f"Section '{section}' has no tool mapping — skipping.",
-                    action="skip",
-                    action_args={},
-                    observation=f"No tool available for '{section}'.",
+                    thought=thought,
+                    action=action,
+                    action_args=tool_args,
+                    observation=obs,
+                    duration_ms=elapsed_ms,
                 ))
-                continue
 
-            server_name = mapping["server"]
-            tool_name = mapping["tool"]
-            arg_builder = mapping["args"]
-            tool_args = arg_builder(intent)
+            # DECIDE check completeness for deterministic loop
+            missing = [s for s in routed_sections if s not in fulfilled]
+            if missing:
+                step_num += 1
+                trace.append(TraceStep(
+                    step=step_num,
+                    thought=f"Sections still missing: {missing}. Max iterations reached.",
+                    action="finish_incomplete",
+                    action_args={},
+                    observation=f"Returning {len(fulfilled)} of {len(routed_sections)} sections.",
+                ))
+            else:
+                step_num += 1
+                trace.append(TraceStep(
+                    step=step_num,
+                    thought="All requested sections fulfilled. Proceeding to reflection.",
+                    action="finish_complete",
+                    action_args={},
+                    observation=f"Successfully gathered {len(fulfilled)} sections: {list(fulfilled.keys())}.",
+                ))
 
-            # THOUGHT
-            available_tools = tools_discovered.get(server_name, [])
-            thought = (
-                f"I need {section} data. Server '{server_name}' exposes "
-                f"{available_tools}. I'll call '{tool_name}' with "
-                f"{tool_args}."
-            )
-
-            # ACT
-            action = f"{server_name}.{tool_name}"
-            t0 = time.perf_counter()
-            try:
-                agent = self._agents[server_name]
-                raw_result = agent.invoke(tool_name, **tool_args)
-
-                # OBSERVE — shape raw tool output into structured card format
-                shaper = _SECTION_SHAPERS.get(section)
-                if shaper:
-                    shaped = shaper(raw_result)
-                else:
-                    shaped = {"section": section, "status": "success", "data": raw_result}
-
-                elapsed_ms = int((time.perf_counter() - t0) * 1000)
-
-                # Summarise the observation for the trace
-                if section == "weather":
-                    obs = (
-                        f"Got weather: {shaped['data'].get('temp')}°C, "
-                        f"UV {shaped['data'].get('uv_index')}, "
-                        f"condition: {shaped['data'].get('condition')}."
-                    )
-                elif section == "news":
-                    count = len(shaped.get("data", {}).get("headlines", []))
-                    obs = f"Got {count} headlines."
-                elif section == "commute":
-                    obs = (
-                        f"Got commute: {shaped['data'].get('eta_minutes')} min "
-                        f"by {shaped['data'].get('recommended_mode')}, "
-                        f"{shaped['data'].get('distance_km')} km."
-                    )
-                elif section == "breakfast":
-                    m_type = shaped.get('data', {}).get('meal_type', 'meal')
-                    obs = (
-                        f"Got {m_type} recipe: {shaped['data'].get('recipe_name')} "
-                        f"({shaped['data'].get('prep_time_minutes')} min prep)."
-                    )
-                elif section == "itinerary":
-                    loc = shaped.get('data', {}).get('location', '')
-                    days_c = shaped.get('data', {}).get('days_count', 2)
-                    obs = f"Generated {days_c}-day itinerary for {loc}."
-                elif section == "email":
-                    status = shaped.get('data', {}).get('status', 'ok')
-                    obs = f"Email tool status: {status}."
-                else:
-                    obs = f"Got result for {section}."
-
-                if telemetry:
-                    telemetry.tool(server_name, tool_name, elapsed_ms, status="OK", trace_id=session_id)
-
-                fulfilled[section] = shaped
-
-            except Exception as exc:
-                elapsed_ms = int((time.perf_counter() - t0) * 1000)
-                obs = f"Error calling {action}: {exc}"
-                if telemetry:
-                    telemetry.tool(server_name, tool_name, elapsed_ms, status="ERROR", trace_id=session_id, error=str(exc))
-                fulfilled[section] = {
-                    "section": section,
-                    "status": "error",
-                    "error": {"code": "tool_error", "message": str(exc)},
-                }
-
-            trace.append(TraceStep(
-                step=step_num,
-                thought=thought,
-                action=action,
-                action_args=tool_args,
-                observation=obs,
-                duration_ms=elapsed_ms,
-            ))
-
-
-        # ── DECIDE: check completeness ─────────────────────────────────────
-        missing = [s for s in routed_sections if s not in fulfilled]
-        if missing:
-            step_num += 1
-            trace.append(TraceStep(
-                step=step_num,
-                thought=f"Sections still missing: {missing}. Max iterations reached.",
-                action="finish_incomplete",
-                action_args={},
-                observation=f"Returning {len(fulfilled)} of {len(routed_sections)} sections.",
-            ))
-        else:
-            step_num += 1
-            trace.append(TraceStep(
-                step=step_num,
-                thought="All requested sections fulfilled. Proceeding to reflection.",
-                action="finish_complete",
-                action_args={},
-                observation=f"Successfully gathered {len(fulfilled)} sections: {list(fulfilled.keys())}.",
-            ))
 
         # ── Step 6: REFLECT ────────────────────────────────────────────────
         reflection = self.reflection_engine.reflect(fulfilled, intent)

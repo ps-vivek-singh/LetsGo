@@ -10,24 +10,26 @@ from agents.breakfast_agent import BreakfastAgent
 from agents.commute_agent import CommuteAgent
 from agents.itinerary_agent import ItineraryAgent
 from agents.agent_registry import AgentRegistry
-from agents.router import Router
+from agents.router import Router, LLMRouter
 from mcp_tools.real_mcp_server import RealMCPServer
 from mcp_tools.server_registry import ServerRegistry
 from mcp_tools.tool_registry import ToolRegistry
 from mcp_tools.email_tools import send_email_briefing
 from services.session_manager import SessionManager
+from services.llm_client import LLMClient
 
 
 class OrchestratorAgent:
     def __init__(self, session_manager: SessionManager | None = None) -> None:
         self.parser = QueryParser()
         self.session_manager = session_manager or SessionManager()
+        self.llm_client = LLMClient()
         self.weather_agent = WeatherAgent()
         self.news_agent = NewsAgent()
         self.breakfast_agent = BreakfastAgent()
         self.commute_agent = CommuteAgent()
         self.itinerary_agent = ItineraryAgent()
-        self.router = Router()
+        self.router = LLMRouter(llm_client=self.llm_client)
         self.tool_registry = ToolRegistry()
         self.tool_registry.register("weather", self.weather_agent.tool)
         self.tool_registry.register("news", self.news_agent.tool)
@@ -79,6 +81,7 @@ class OrchestratorAgent:
             server_registry=registry_or_manager,
             parser=self.parser,
             router=self.router,
+            llm_client=self.llm_client,
         )
 
     def close(self) -> None:
