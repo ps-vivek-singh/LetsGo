@@ -13,7 +13,7 @@
 
 ## 1. Executive Summary
 
-**LetsGo** is a modular, autonomous multi-agent application that orchestrates specialist AI agents to provide comprehensive, context-aware daily briefings and personalized travel itineraries. Combining a zero-dependency **NLP Query Parser**, an explicit **ReAct (Reason + Act) Control Loop**, standard **Model Context Protocol (FastMCP)** tool servers, a multi-factor **Cross-Domain Reflection Engine**, and a conversational **Response Synthesizer**, the application generates actionable, highly tailored daily intelligence.
+**LetsGo** is a modular, autonomous multi-agent application that orchestrates specialist AI agents to provide comprehensive, context-aware daily briefings and personalized travel itineraries. Combining a zero-dependency **NLP Query Parser**, a dual-mode **ReAct (Reason + Act) Control Loop** (operating in either an autonomous **LLM-Driven Mode** or a zero-dependency **Deterministic Fallback Mode**), standard **Model Context Protocol (FastMCP)** tool servers, a multi-factor **Cross-Domain Reflection Engine**, and a conversational **Response Synthesizer**, the application generates actionable, highly tailored daily intelligence.
 
 The application functions across three distinct operating environments:
 1. **Interactive Command-Line Interface (CLI)**: High-speed terminal interaction for automated scripts and headless environments.
@@ -29,9 +29,11 @@ The application functions across three distinct operating environments:
 │                                    LETSGO                                        │
 ├─────────────────────────┬───────────────────────────────┬────────────────────────┤
 │   1. NLP INTENT ENGINE  │     2. MULTI-AGENT SYSTEM     │   3. FASTMCP TOOL MESH │
-│  • Regex + Pattern Match│  • ReAct Agentic Loop (7-Step)│  • FastMCP Tool Servers│
-│  • Zero-ML Instant Start│  • Multi-Factor Reflection    │  • LLM Engine (NVIDIA) │
-│  • Multi-Entity Extract │  • NL Response Synthesizer    │  • Gmail SMTP Dispatch │
+│  • Regex + Pattern Match│  • Dual-Mode ReAct Loop       │  • FastMCP Tool Servers│
+│  • Zero-ML Instant Start│    - LLM Autonomous Selection │  • LLM Engine (NVIDIA) │
+│  • Multi-Entity Extract │    - Deterministic Fallback   │  • Gmail SMTP Dispatch │
+│                         │  • Multi-Factor Reflection    │                        │
+│                         │  • NL Response Synthesizer    │                        │
 ├─────────────────────────┼───────────────────────────────┼────────────────────────┤
 │   4. REAL-TIME STREAM   │     5. PERSISTENCE & STATE    │   6. DUAL INTERFACES   │
 │  • Server-Sent Events   │  • SQLite DB (WAL Mode)       │  • Responsive Web Dash │
@@ -79,7 +81,7 @@ src/mcp_tools/
 
 ## 5. ReAct Agentic Loop & Reflection Engine
 
-Every briefing query submitted to the system is executed through a 7-stage **ReAct Control Loop**:
+Every briefing query submitted to the system is executed through a 7-stage **ReAct Control Loop** supporting two execution modes:
 
 ```mermaid
 sequenceDiagram
@@ -87,6 +89,7 @@ sequenceDiagram
     actor User as User / Browser
     participant Orchestrator as OrchestratorAgent
     participant AgenticLoop as AgenticLoop
+    participant LLM as LLMClient (NVIDIA / Groq / OpenAI)
     participant MCP as FastMCP Tool Servers
     participant Reflection as ReflectionEngine
     participant Synthesizer as ResponseSynthesizer
@@ -96,11 +99,22 @@ sequenceDiagram
     Orchestrator->>AgenticLoop: run(query, session_id)
     AgenticLoop->>AgenticLoop: 1. PERCEIVE (QueryParser extracts entities & meal_type)
     AgenticLoop->>MCP: 2. DISCOVER (List tools on all FastMCP servers)
-    AgenticLoop->>AgenticLoop: 3. PLAN (Route requested sections into execution queue)
     
-    loop ACT -> OBSERVE (per section)
-        AgenticLoop->>MCP: 4. ACT (Invoke tool with structured parameters)
-        MCP-->>AgenticLoop: 5. OBSERVE (Capture output & shape card data)
+    alt LLM-Driven Mode (API key present & LLM available)
+        loop Iterative Act -> Observe -> Decide Loop
+            AgenticLoop->>LLM: select_next_action(query, manifest, trace)
+            LLM-->>AgenticLoop: {thought, action, action_args}
+            opt action != "finish"
+                AgenticLoop->>MCP: Invoke tool with LLM arguments
+                MCP-->>AgenticLoop: Raw observation payload
+            end
+        end
+    else Deterministic Fallback Mode (No API key or LLM error)
+        AgenticLoop->>AgenticLoop: Route requested sections into execution queue
+        loop For each pending section
+            AgenticLoop->>MCP: Invoke section tool via _SECTION_TOOL_MAP
+            MCP-->>AgenticLoop: Raw observation payload
+        end
     end
 
     AgenticLoop->>Reflection: 6. REFLECT (Cross-check multi-domain rules)
@@ -111,6 +125,18 @@ sequenceDiagram
     AgenticLoop-->>Orchestrator: AgenticResult
     Orchestrator-->>User: Structured JSON + SSE Stream
 ```
+
+### Execution Modes Breakdown
+
+The system dynamically switches between two execution modes depending on environment configuration and LLM API availability:
+
+| Feature | LLM-Driven Mode | Deterministic Fallback Mode |
+|---|---|---|
+| **Trigger Condition** | `LLM_API_KEY` configured and `LLMClient.is_available() == True` | No API key configured, offline mode, or LLM invocation exception |
+| **Tool Selection** | Autonomous model selection via `select_next_action()` | Keyword/entity routing via `Router.route()` and `_SECTION_TOOL_MAP` |
+| **Parameter Generation** | Dynamic arguments constructed by LLM reasoning | Structured arguments populated from `QueryParser` intent slots |
+| **Loop Control / Termination** | LLM inspects trace history and emits `action: "finish"` | Queue empties when all requested section tools complete (or max steps reached) |
+| **Resilience & Failover** | Automatic fallback to Deterministic Mode if LLM call fails | Runs 100% locally with zero external network or ML model dependencies |
 
 ### Multi-Factor Reflection Rules
 1. **Heat vs. Commute Mode**: `temp ≥ 35°C` with `bike`/`walk` commute → Auto-switches recommendation to `drive` and injects heat advisory.
@@ -254,7 +280,10 @@ SMTP_HOST=smtp.gmail.com
 SMTP_PORT=465
 ```
 
-> **Note**: Free, zero-configuration public fallbacks (Open-Meteo, RSS feeds, deterministic chef engine, advisory routing) are automatically active if API keys are omitted.
+> **Note**:
+> - **LLM-Driven Mode** is automatically activated when `NVIDIA_API_KEY`, `GROQ_API_KEY`, or `OPENAI_API_KEY` is present in your environment. The model dynamically selects tools, passes custom parameters, and decides when to complete execution.
+> - **Deterministic Fallback Mode** is automatically active when API keys are omitted or if the LLM service is unreachable. The system falls back to pure Python keyword/intent routing and deterministic section tool execution with 100% reliability.
+> - Free, zero-configuration public fallbacks (Open-Meteo, RSS feeds, deterministic chef engine, advisory routing) are automatically active for tool APIs if API keys are omitted.
 
 ---
 

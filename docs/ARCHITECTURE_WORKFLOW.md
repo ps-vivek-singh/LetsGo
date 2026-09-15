@@ -22,13 +22,15 @@ graph TD
         Discovery --> ToolList["Discovered FastMCP Tools (@mcp.tool)"]
     end
 
-    subgraph "Step 3-5: Execution & Observation"
-        Loop --> Action[Execute Section Tools]
-        Action --> W_MCP["weather_tools.py (@mcp.tool get_weather)"]
-        Action --> C_MCP["commute_tools.py (@mcp.tool get_commute_route)"]
-        Action --> M_MCP["recipe_tools.py (@mcp.tool get_meal_recipe)"]
-        Action --> N_MCP["news_tools.py (@mcp.tool get_headlines)"]
-        Action --> I_MCP["itinerary_tools.py (@mcp.tool get_itinerary)"]
+    subgraph "Step 3-5: Execution & Observation (Dual-Mode)"
+        Loop --> ModeCheck{"LLM Key Active & Available?"}
+        ModeCheck -->|Yes: LLM-Driven| LLMAction["LLM select_next_action() Iterative Loop"]
+        ModeCheck -->|No: Fallback| RouterAction["Router & _SECTION_TOOL_MAP Execution Queue"]
+        LLMAction & RouterAction --> W_MCP["weather_tools.py (@mcp.tool get_weather)"]
+        LLMAction & RouterAction --> C_MCP["commute_tools.py (@mcp.tool get_commute_route)"]
+        LLMAction & RouterAction --> M_MCP["recipe_tools.py (@mcp.tool get_meal_recipe)"]
+        LLMAction & RouterAction --> N_MCP["news_tools.py (@mcp.tool get_headlines)"]
+        LLMAction & RouterAction --> I_MCP["itinerary_tools.py (@mcp.tool get_itinerary)"]
     end
 
     subgraph "Step 6: Reflection & Consistency"
@@ -80,12 +82,22 @@ sequenceDiagram
     Loop->>MCP: list_tools() across all servers
     MCP-->>Loop: {weather: [get_weather], recipe: [get_meal_recipe], ...}
     
-    Note over Loop,MCP: Phase 3-5: Plan, Act & Observe
-    loop For each section in intent.sections
-        Loop->>Loop: Generate ReAct Thought
-        Loop->>MCP: Invoke tool with structured parameters
-        MCP-->>Loop: Raw observation payload
-        Loop->>Loop: Shape domain card data & record duration_ms
+    Note over Loop,MCP: Phase 3-5: Plan, Act, Observe & Decide (Dual Mode)
+    alt LLM-Driven Mode (API Key Present)
+        loop Iterative LLM Action Cycle
+            Loop->>LLM: select_next_action(query, manifest, trace)
+            LLM-->>Loop: Decision {thought, action, action_args}
+            opt action != "finish"
+                Loop->>MCP: Invoke tool with LLM arguments
+                MCP-->>Loop: Raw observation payload & shape card data
+            end
+        end
+    else Deterministic Fallback Mode (No Key / LLM Error)
+        Loop->>Loop: Router.route(sections) -> Execution Queue
+        loop For each section in pending queue
+            Loop->>MCP: Invoke tool via _SECTION_TOOL_MAP
+            MCP-->>Loop: Raw observation payload & shape card data
+        end
     end
     
     Note over Loop,Refl: Phase 6: Cross-Domain Reflection
@@ -170,7 +182,7 @@ sequenceDiagram
 
 | Failure Scenario | Immediate Fallback Mechanism | Impact on User Experience |
 |---|---|---|
-| **No LLM API Key or LLM Service Downtime** | FastMCP recipe & itinerary tools activate the deterministic Generative Chef Engine and Curated City Itinerary Engine. | Zero downtime; structured recipe and day-by-day itineraries are generated instantly. |
+| **No LLM API Key or LLM Service Downtime** | `AgenticLoop` seamlessly switches to **Deterministic Fallback Mode** via `Router.route()` and `_SECTION_TOOL_MAP`. FastMCP recipe & itinerary tools activate the Generative Chef and Curated City engines. | Zero downtime; briefing sections and itineraries are gathered deterministically with 100% reliability. |
 | **TomTom API Rate-Limit or Key Missing** | OpenRouteService API is queried; if unavailable, the Advisory Commute Engine calculates distance-based synthetic ETAs. | Route recommendations, ETAs, and alternate comparisons remain 100% available. |
 | **NewsAPI Endpoint Failure** | Multi-feed RSS parser executes fallback chain across BBC, NDTV, and NYT feeds. | Live headlines with publisher attribution and clickable URLs are delivered seamlessly. |
 | **Gmail Credentials Missing in `.env`** | Gmail FastMCP tool returns simulated delivery status with detailed confirmation. | System does not crash; UI informs user that credentials need to be set in `.env`. |

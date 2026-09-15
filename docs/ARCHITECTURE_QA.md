@@ -34,9 +34,9 @@ LetsGo employs a **Hybrid Agentic Architecture**:
 └─────────────────────────────────────────┴───────────────────────────────────┘
 ```
 
-1. **Deterministic Core**: NLP query parsing, tool discovery, routing, and reflection rules run deterministically in pure Python without heavy ML startup times or memory overhead.
-2. **Dynamic LLM Engine**: For tasks requiring culinary creativity or personalized travel itineraries, the system connects via `LLMClient` to NVIDIA NIM (`meta/llama-3.1-8b-instruct`), Groq, OpenRouter, Gemini, or OpenAI.
-3. **Graceful Fallbacks**: If the system is offline or no LLM key is configured, the deterministic Generative Chef Engine seamlessly steps in, guaranteeing zero downtime.
+1. **Deterministic Core**: Zero-dependency NLP query parsing, tool discovery, rule-based section routing, and reflection rules run deterministically in pure Python without heavy ML startup times or memory overhead.
+2. **Dynamic LLM Engine**: When configured with an API key, `AgenticLoop` operates in **LLM-Driven Mode**, using `LLMClient.select_next_action()` to autonomously pick tools, construct arguments dynamically, evaluate observations step-by-step, and decide when to finish.
+3. **Graceful Fallbacks**: If the system is offline, no LLM key is configured, or an LLM call fails, the system seamlessly activates **Deterministic Fallback Mode**, mapping intents through `Router.route()` and `_SECTION_TOOL_MAP` to guarantee 100% execution reliability without downtime.
 
 ---
 
@@ -65,8 +65,11 @@ Email dispatch is implemented as an official FastMCP server (`src/mcp_tools/emai
 **Answer**:
 The 7-stage ReAct cycle (`Perceive → Discover → Plan → Act → Observe → Decide → Reflect → Synthesize`) provides:
 1. **Traceability**: Every thought, action, argument, observation, and duration is captured in `loop_trace` for full debugging transparency.
-2. **Resilience**: Per-action timeouts prevent a single slow tool from stalling the entire briefing.
-3. **Cross-Domain Auditing**: Separating the initial data gathering from the reflection phase allows the system to compare disparate domains (e.g., matching outdoor weather against commute mode and meal prep time).
+2. **Dual-Mode Execution**:
+   - *LLM-Driven Mode*: The model iteratively calls `select_next_action()` to pick tools and decide when to stop by returning `action: "finish"`.
+   - *Deterministic Fallback Mode*: Uses zero-dependency keyword routing to populate a sequential section queue, executing tools via `_SECTION_TOOL_MAP`.
+3. **Resilience**: Per-action timeouts prevent a single slow tool from stalling the entire briefing.
+4. **Cross-Domain Auditing**: Separating the initial data gathering from the reflection phase allows the system to compare disparate domains (e.g., matching outdoor weather against commute mode and meal prep time).
 
 ---
 
